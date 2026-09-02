@@ -1,123 +1,670 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
+
+import {
+  createAppKit,
+  AppKitButton,
+  useAppKitAccount
+} from "@reown/appkit/react";
+
+import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
+
+import {
+  sepolia
+} from "@reown/appkit/networks";
+
+import {
+  WagmiProvider,
+  useAccount,
+  useBalance,
+  useChainId
+} from "wagmi";
+
+import {
+  QueryClient,
+  QueryClientProvider
+} from "@tanstack/react-query";
+
 import "./style.css";
 
-const API =
-  "https://pro-api.coinmarketcap.com/public-api";
+/* =========================================================
+   CRYPTOPOOL 2.1
+   PC + ANDROID + IOS
+   ETHEREUM SEPOLIA TESTNET
+   ========================================================= */
 
-const SEPOLIA_CHAIN_ID = "0xaa36a7";
-const SEPOLIA_CHAIN_ID_DECIMAL = 11155111;
+/*
+  IMPORTANT:
+  Replace this value with your Reown Project ID.
+
+  Do NOT put a seed phrase or private key here.
+*/
+const projectId = "YOUR_REOWN_PROJECT_ID";
+
+const queryClient = new QueryClient();
+
+/* =========================================================
+   NETWORK
+   ========================================================= */
+
+const networks = [sepolia];
+
+const metadata = {
+  name: "CryptoPool",
+  description: "CryptoPool 2.1 Testnet",
+  url: "https://huong83.github.io/CryptoPool-App/",
+  icons: [
+    "https://avatars.githubusercontent.com/u/179229932"
+  ]
+};
+
+/* =========================================================
+   WAGMI ADAPTER
+   ========================================================= */
+
+const wagmiAdapter = new WagmiAdapter({
+  networks,
+  projectId,
+  ssr: true
+});
+
+/* =========================================================
+   APPKIT
+   ========================================================= */
+
+createAppKit({
+  adapters: [wagmiAdapter],
+  networks,
+  projectId,
+  metadata,
+  features: {
+    analytics: false
+  }
+});
+
+/* =========================================================
+   FALLBACK MARKET DATA
+   ========================================================= */
 
 const FALLBACK = [
   {
-    id: 1,
-    name: "Bitcoin",
+    rank: 1,
     symbol: "BTC",
-    quote: { USD: { price: 76000, percent_change_24h: 1.2 } },
+    name: "Bitcoin",
+    price: 65000,
+    change: 2.15
   },
   {
-    id: 1027,
+    rank: 2,
+    symbol: "ETH",
     name: "Ethereum",
-    symbol: "ETH",
-    quote: { USD: { price: 2370, percent_change_24h: 0.8 } },
+    price: 3400,
+    change: 1.82
   },
   {
-    id: 825,
-    name: "Tether",
+    rank: 3,
     symbol: "USDT",
-    quote: { USD: { price: 1, percent_change_24h: 0.01 } },
+    name: "Tether",
+    price: 1,
+    change: 0.01
   },
   {
-    id: 1839,
-    name: "BNB",
+    rank: 4,
     symbol: "BNB",
-    quote: { USD: { price: 690, percent_change_24h: -0.4 } },
+    name: "BNB",
+    price: 580,
+    change: -0.52
   },
   {
-    id: 52,
-    name: "XRP",
-    symbol: "XRP",
-    quote: { USD: { price: 2.9, percent_change_24h: 2.1 } },
+    rank: 5,
+    symbol: "SOL",
+    name: "Solana",
+    price: 145,
+    change: 3.42
   },
+  {
+    rank: 6,
+    symbol: "USDC",
+    name: "USD Coin",
+    price: 1,
+    change: -0.01
+  }
 ];
 
-const INITIAL_PORTFOLIO = [
-  {
-    symbol: "ETH",
-    amount: 0,
-    value: 0,
-  },
-];
+const CMC_API =
+  "https://pro-api.coinmarketcap.com/public-api";
 
-const DEXES = [
-  {
-    name: "Uniswap",
-    description: "Decentralized exchange",
-  },
-  {
-    name: "PancakeSwap",
-    description: "Decentralized exchange",
-  },
-  {
-    name: "Curve",
-    description: "Liquidity-focused DEX",
-  },
-];
+/* =========================================================
+   WALLET PANEL
+   ========================================================= */
 
-function shortAddress(address) {
-  if (!address) return "";
-  return `${address.slice(0, 6)}...${address.slice(-4)}`;
-}
+function WalletStatus() {
+  const { address, isConnected } = useAccount();
 
-function formatUSD(value) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 2,
-  }).format(Number(value) || 0);
-}
+  const chainId = useChainId();
 
-function formatNumber(value, digits = 4) {
-  return Number(value || 0).toLocaleString("en-US", {
-    maximumFractionDigits: digits,
+  const { data: balance } = useBalance({
+    address
   });
+
+  if (!isConnected) {
+    return (
+      <div className="wallet-card">
+        <div className="wallet-card-title">
+          Wallet
+        </div>
+
+        <div className="wallet-disconnected">
+          <div className="wallet-icon">
+            👛
+          </div>
+
+          <div>
+            <strong>Chưa kết nối ví</strong>
+            <p>
+              Hỗ trợ PC, Android và iOS
+            </p>
+          </div>
+        </div>
+
+        <div className="wallet-connect-large">
+          <AppKitButton />
+        </div>
+      </div>
+    );
+  }
+
+  const shortAddress =
+    address
+      ? `${address.slice(0, 6)}...${address.slice(-4)}`
+      : "";
+
+  const balanceText =
+    balance
+      ? `${Number(balance.formatted).toFixed(5)} ${balance.symbol}`
+      : "Đang tải...";
+
+  return (
+    <div className="wallet-card connected">
+      <div className="wallet-card-title">
+        Wallet Connected
+      </div>
+
+      <div className="wallet-address">
+        <span className="status-dot"></span>
+
+        <strong>{shortAddress}</strong>
+      </div>
+
+      <div className="wallet-info-grid">
+        <div>
+          <span>Network</span>
+          <strong>
+            {chainId === 11155111
+              ? "Sepolia"
+              : `Chain ${chainId}`}
+          </strong>
+        </div>
+
+        <div>
+          <span>Balance</span>
+          <strong>{balanceText}</strong>
+        </div>
+      </div>
+
+      <AppKitButton />
+    </div>
+  );
 }
 
-function App() {
-  const [page, setPage] = useState("Dashboard");
+/* =========================================================
+   DASHBOARD
+   ========================================================= */
 
-  const [coins, setCoins] = useState(FALLBACK);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+function Dashboard({
+  coins,
+  loading,
+  error,
+  onRefresh,
+  onTrade
+}) {
+  const topCoins = coins.slice(0, 6);
 
-  const [dark, setDark] = useState(true);
+  return (
+    <div className="page">
+      <div className="hero">
+        <div>
+          <div className="eyebrow">
+            CRYPTOPOOL 2.1
+          </div>
 
-  // Testnet wallet state
-  const [wallet, setWallet] = useState(false);
-  const [walletAddress, setWalletAddress] = useState("");
-  const [chainId, setChainId] = useState("");
-  const [walletBalance, setWalletBalance] = useState("0");
-  const [walletError, setWalletError] = useState("");
-  const [walletLoading, setWalletLoading] = useState(false);
+          <h1>
+            Crypto investing
+            <br />
+            <span>Testnet platform</span>
+          </h1>
 
-  const [portfolio, setPortfolio] =
-    useState(INITIAL_PORTFOLIO);
+          <p>
+            Kết nối ví thật trên PC, Android và iOS
+            để thử nghiệm CryptoPool trên Ethereum
+            Sepolia Testnet.
+          </p>
 
-  const [orders, setOrders] = useState([]);
+          <div className="hero-actions">
+            <AppKitButton />
 
-  const [selectedCoin, setSelectedCoin] = useState(null);
+            <button
+              className="secondary-button"
+              onClick={onRefresh}
+            >
+              {loading ? "Đang tải..." : "↻ Market"}
+            </button>
+          </div>
+        </div>
+
+        <div className="hero-badge">
+          <div className="pulse"></div>
+
+          <strong>TESTNET</strong>
+
+          <span>
+            Ethereum Sepolia
+          </span>
+        </div>
+      </div>
+
+      {error && (
+        <div className="alert">
+          ⚠️ {error}
+        </div>
+      )}
+
+      <WalletStatus />
+
+      <div className="section-heading">
+        <div>
+          <h2>Market</h2>
+          <p>Dữ liệu thị trường tham khảo</p>
+        </div>
+      </div>
+
+      <div className="coin-grid">
+        {topCoins.map((coin) => (
+          <div
+            className="coin-card"
+            key={coin.symbol}
+          >
+            <div className="coin-top">
+              <div className="coin-avatar">
+                {coin.symbol.slice(0, 1)}
+              </div>
+
+              <div>
+                <strong>{coin.name}</strong>
+                <span>{coin.symbol}</span>
+              </div>
+            </div>
+
+            <div className="coin-price">
+              ${formatPrice(coin.price)}
+            </div>
+
+            <div
+              className={
+                coin.change >= 0
+                  ? "positive"
+                  : "negative"
+              }
+            >
+              {coin.change >= 0 ? "+" : ""}
+              {coin.change.toFixed(2)}%
+            </div>
+
+            <button
+              className="trade-small"
+              onClick={() => onTrade(coin)}
+            >
+              Trade Testnet
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* =========================================================
+   MARKETS
+   ========================================================= */
+
+function Markets({ coins, onTrade }) {
   const [search, setSearch] = useState("");
 
-  const [selectedDex, setSelectedDex] =
-    useState("Uniswap");
+  const filtered = coins.filter((coin) => {
+    const value =
+      `${coin.name} ${coin.symbol}`.toLowerCase();
 
-  const [tradeAmount, setTradeAmount] = useState("");
+    return value.includes(search.toLowerCase());
+  });
 
-  /*
-   * ----------------------------------------
-   * MARKET DATA
-   * ----------------------------------------
-   */
+  return (
+    <div className="page">
+      <div className="page-header">
+        <div>
+          <div className="eyebrow">
+            MARKET
+          </div>
+
+          <h1>Crypto Markets</h1>
+
+          <p>
+            Theo dõi tài sản crypto trước khi
+            thực hiện giao dịch testnet.
+          </p>
+        </div>
+      </div>
+
+      <div className="search-box">
+        🔎
+
+        <input
+          value={search}
+          onChange={(e) =>
+            setSearch(e.target.value)
+          }
+          placeholder="Tìm Bitcoin, Ethereum..."
+        />
+      </div>
+
+      <div className="market-table">
+        <div className="market-row market-header">
+          <span>#</span>
+          <span>Asset</span>
+          <span>Price</span>
+          <span>24h</span>
+          <span></span>
+        </div>
+
+        {filtered.map((coin) => (
+          <div
+            className="market-row"
+            key={coin.symbol}
+          >
+            <span>{coin.rank}</span>
+
+            <div className="asset-name">
+              <div className="coin-avatar small">
+                {coin.symbol.slice(0, 1)}
+              </div>
+
+              <div>
+                <strong>{coin.name}</strong>
+                <span>{coin.symbol}</span>
+              </div>
+            </div>
+
+            <strong>
+              ${formatPrice(coin.price)}
+            </strong>
+
+            <span
+              className={
+                coin.change >= 0
+                  ? "positive"
+                  : "negative"
+              }
+            >
+              {coin.change >= 0 ? "+" : ""}
+              {coin.change.toFixed(2)}%
+            </span>
+
+            <button
+              className="table-button"
+              onClick={() => onTrade(coin)}
+            >
+              Trade
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* =========================================================
+   TRADE
+   ========================================================= */
+
+function Trade({ selectedCoin }) {
+  const [amount, setAmount] = useState("");
+
+  return (
+    <div className="page">
+      <div className="page-header">
+        <div>
+          <div className="eyebrow">
+            TESTNET TRADE
+          </div>
+
+          <h1>Trade</h1>
+
+          <p>
+            Mô phỏng giao dịch trên Sepolia.
+            Chưa sử dụng tiền thật.
+          </p>
+        </div>
+      </div>
+
+      <div className="trade-layout">
+        <div className="trade-panel">
+          <div className="trade-panel-head">
+            <div>
+              <span>Swap from</span>
+              <strong>ETH</strong>
+            </div>
+
+            <div className="token-icon">
+              Ξ
+            </div>
+          </div>
+
+          <input
+            className="amount-input"
+            value={amount}
+            onChange={(e) =>
+              setAmount(e.target.value)
+            }
+            placeholder="0.00"
+            inputMode="decimal"
+          />
+
+          <div className="swap-arrow">
+            ↓
+          </div>
+
+          <div className="trade-panel-head">
+            <div>
+              <span>Swap to</span>
+              <strong>
+                {selectedCoin?.symbol || "USDC"}
+              </strong>
+            </div>
+
+            <div className="token-icon">
+              $
+            </div>
+          </div>
+
+          <div className="amount-output">
+            {amount
+              ? "Testnet quote"
+              : "0.00"}
+          </div>
+
+          <AppKitButton />
+
+          <div className="trade-warning">
+            🧪 TESTNET ONLY
+            <br />
+            Giao dịch thật chưa được kích hoạt.
+          </div>
+        </div>
+
+        <div className="trade-info">
+          <h2>Pre-transaction checks</h2>
+
+          <CheckItem
+            title="Wallet"
+            value="Kiểm tra trước giao dịch"
+          />
+
+          <CheckItem
+            title="Network"
+            value="Ethereum Sepolia"
+          />
+
+          <CheckItem
+            title="Gas"
+            value="Testnet ETH"
+          />
+
+          <CheckItem
+            title="Slippage"
+            value="Sẽ được kiểm tra trước khi ký"
+          />
+
+          <CheckItem
+            title="Simulation"
+            value="Sẽ được bổ sung trước swap thật"
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CheckItem({ title, value }) {
+  return (
+    <div className="check-item">
+      <div className="check-icon">
+        ✓
+      </div>
+
+      <div>
+        <strong>{title}</strong>
+        <span>{value}</span>
+      </div>
+    </div>
+  );
+}
+
+/* =========================================================
+   PORTFOLIO
+   ========================================================= */
+
+function Portfolio() {
+  const { address } = useAccount();
+
+  return (
+    <div className="page">
+      <div className="page-header">
+        <div>
+          <div className="eyebrow">
+            PORTFOLIO
+          </div>
+
+          <h1>Your Portfolio</h1>
+
+          <p>
+            Ví testnet được kết nối trực tiếp,
+            không lưu private key.
+          </p>
+        </div>
+      </div>
+
+      {!address ? (
+        <div className="empty-state">
+          <div>👛</div>
+
+          <h2>Connect your wallet</h2>
+
+          <p>
+            Kết nối ví để xem số dư Sepolia.
+          </p>
+
+          <AppKitButton />
+        </div>
+      ) : (
+        <div className="portfolio-card">
+          <WalletStatus />
+
+          <div className="portfolio-notice">
+            🛡️ CryptoPool không có quyền lấy
+            private key hoặc seed phrase của bạn.
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* =========================================================
+   ORDERS
+   ========================================================= */
+
+function Orders() {
+  return (
+    <div className="page">
+      <div className="page-header">
+        <div>
+          <div className="eyebrow">
+            TRANSACTIONS
+          </div>
+
+          <h1>Orders</h1>
+
+          <p>
+            Lịch sử giao dịch testnet sẽ xuất hiện
+            tại đây.
+          </p>
+        </div>
+      </div>
+
+      <div className="empty-state">
+        <div>📋</div>
+
+        <h2>No testnet orders</h2>
+
+        <p>
+          Chưa có giao dịch testnet nào.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/* =========================================================
+   APP
+   ========================================================= */
+
+function App() {
+  const [page, setPage] =
+    useState("Dashboard");
+
+  const [coins, setCoins] =
+    useState(FALLBACK);
+
+  const [loading, setLoading] =
+    useState(false);
+
+  const [error, setError] =
+    useState("");
+
+  const [dark, setDark] =
+    useState(true);
+
+  const [selectedCoin, setSelectedCoin] =
+    useState(null);
 
   async function loadMarket() {
     setLoading(true);
@@ -125,25 +672,37 @@ function App() {
 
     try {
       const response = await fetch(
-        `${API}/v3/cryptocurrency/listings/latest?start=1&limit=100&convert=USD`
+        `${CMC_API}/v3/cryptocurrency/listings/latest?start=1&limit=100&convert=USD`
       );
 
       if (!response.ok) {
-        throw new Error("Market API unavailable");
+        throw new Error(
+          "Market API không phản hồi."
+        );
       }
 
       const json = await response.json();
 
-      if (json?.data?.length) {
-        setCoins(json.data);
-      } else {
-        throw new Error("No market data");
+      const data =
+        json?.data?.map((item) => ({
+          rank: item.cmc_rank,
+          symbol: item.symbol,
+          name: item.name,
+          price:
+            item.quote?.USD?.price || 0,
+          change:
+            item.quote?.USD?.percent_change_24h ||
+            0
+        })) || [];
+
+      if (data.length) {
+        setCoins(data);
       }
     } catch (err) {
-      console.log("Using fallback market data:", err);
       setError(
-        "Live market data is temporarily unavailable. Showing fallback data."
+        "Không lấy được dữ liệu thị trường. Đang sử dụng dữ liệu dự phòng."
       );
+
       setCoins(FALLBACK);
     } finally {
       setLoading(false);
@@ -153,1314 +712,209 @@ function App() {
   useEffect(() => {
     loadMarket();
 
-    const timer = setInterval(() => {
-      loadMarket();
-    }, 60000);
+    const timer = setInterval(
+      loadMarket,
+      60000
+    );
 
     return () => clearInterval(timer);
   }, []);
 
-  /*
-   * ----------------------------------------
-   * WALLET / TESTNET
-   * ----------------------------------------
-   */
-
-  const ethereum =
-    typeof window !== "undefined"
-      ? window.ethereum
-      : null;
-
-  async function readWalletState(addressOverride = null) {
-    if (!ethereum) {
-      setWallet(false);
-      setWalletError(
-        "No compatible browser wallet was detected."
-      );
-      return;
-    }
-
-    try {
-      const accounts =
-        await ethereum.request({
-          method: "eth_accounts",
-        });
-
-      const address =
-        addressOverride || accounts?.[0];
-
-      const currentChain =
-        await ethereum.request({
-          method: "eth_chainId",
-        });
-
-      setChainId(currentChain || "");
-
-      if (!address) {
-        setWallet(false);
-        setWalletAddress("");
-        setWalletBalance("0");
-        return;
-      }
-
-      setWallet(true);
-      setWalletAddress(address);
-
-      const balanceHex =
-        await ethereum.request({
-          method: "eth_getBalance",
-          params: [address, "latest"],
-        });
-
-      const balanceWei = BigInt(balanceHex || "0x0");
-
-      const whole =
-        balanceWei / 1000000000000000000n;
-
-      const fraction =
-        balanceWei % 1000000000000000000n;
-
-      const fractionText =
-        fraction
-          .toString()
-          .padStart(18, "0")
-          .slice(0, 6);
-
-      setWalletBalance(
-        `${whole.toString()}.${fractionText}`
-      );
-
-      if (currentChain !== SEPOLIA_CHAIN_ID) {
-        setWalletError(
-          "Wallet connected, but it is not on Sepolia Testnet."
-        );
-      } else {
-        setWalletError("");
-      }
-    } catch (err) {
-      console.error(err);
-      setWalletError(
-        "Unable to read wallet information."
-      );
-    }
-  }
-
-  async function connectWallet() {
-    setWalletError("");
-
-    if (!ethereum) {
-      setWalletError(
-        "Please install or open a compatible Web3 wallet such as MetaMask."
-      );
-      return;
-    }
-
-    setWalletLoading(true);
-
-    try {
-      const accounts =
-        await ethereum.request({
-          method: "eth_requestAccounts",
-        });
-
-      const address = accounts?.[0];
-
-      if (!address) {
-        throw new Error("No wallet account selected.");
-      }
-
-      setWalletAddress(address);
-      setWallet(true);
-
-      await switchToSepolia();
-      await readWalletState(address);
-    } catch (err) {
-      console.error(err);
-
-      if (err?.code === 4001) {
-        setWalletError(
-          "Wallet connection was cancelled."
-        );
-      } else {
-        setWalletError(
-          err?.message ||
-            "Unable to connect wallet."
-        );
-      }
-    } finally {
-      setWalletLoading(false);
-    }
-  }
-
-  async function switchToSepolia() {
-    if (!ethereum) return false;
-
-    try {
-      await ethereum.request({
-        method: "wallet_switchEthereumChain",
-        params: [
-          {
-            chainId: SEPOLIA_CHAIN_ID,
-          },
-        ],
-      });
-
-      setChainId(SEPOLIA_CHAIN_ID);
-      return true;
-    } catch (err) {
-      console.error(err);
-
-      if (err?.code === 4902) {
-        setWalletError(
-          "Sepolia is not available in this wallet. Please add Ethereum Sepolia Testnet manually."
-        );
-      } else if (err?.code === 4001) {
-        setWalletError(
-          "Network switch was cancelled."
-        );
-      } else {
-        setWalletError(
-          err?.message ||
-            "Unable to switch to Sepolia."
-        );
-      }
-
-      return false;
-    }
-  }
-
-  async function disconnectWallet() {
-    /*
-     * Browser wallets normally do not expose
-     * a programmatic disconnect method.
-     *
-     * We simply clear CryptoPool's local UI state.
-     * The wallet itself remains controlled by the user.
-     */
-
-    setWallet(false);
-    setWalletAddress("");
-    setWalletBalance("0");
-    setChainId("");
-    setWalletError("");
-  }
-
-  useEffect(() => {
-    if (!ethereum) return;
-
-    readWalletState();
-
-    const handleAccountsChanged = (accounts) => {
-      const address = accounts?.[0] || "";
-
-      if (!address) {
-        setWallet(false);
-        setWalletAddress("");
-        setWalletBalance("0");
-        return;
-      }
-
-      readWalletState(address);
-    };
-
-    const handleChainChanged = (newChainId) => {
-      setChainId(newChainId);
-
-      if (walletAddress) {
-        readWalletState(walletAddress);
-      }
-    };
-
-    ethereum.on(
-      "accountsChanged",
-      handleAccountsChanged
-    );
-
-    ethereum.on(
-      "chainChanged",
-      handleChainChanged
-    );
-
-    return () => {
-      ethereum.removeListener(
-        "accountsChanged",
-        handleAccountsChanged
-      );
-
-      ethereum.removeListener(
-        "chainChanged",
-        handleChainChanged
-      );
-    };
-  }, [ethereum, walletAddress]);
-
-  /*
-   * ----------------------------------------
-   * MARKET FILTER
-   * ----------------------------------------
-   */
-
-  const filteredCoins = useMemo(() => {
-    const query =
-      search.trim().toLowerCase();
-
-    if (!query) return coins;
-
-    return coins.filter((coin) =>
-      `${coin.name} ${coin.symbol}`
-        .toLowerCase()
-        .includes(query)
-    );
-  }, [coins, search]);
-
-  /*
-   * ----------------------------------------
-   * PORTFOLIO
-   * ----------------------------------------
-   */
-
-  const portfolioValue = useMemo(() => {
-    return portfolio.reduce(
-      (total, item) => {
-        const coin = coins.find(
-          (c) =>
-            c.symbol.toUpperCase() ===
-            item.symbol.toUpperCase()
-        );
-
-        if (!coin) return total;
-
-        const price =
-          coin.quote?.USD?.price || 0;
-
-        return (
-          total +
-          Number(item.amount || 0) * price
-        );
-      },
-      0
-    );
-  }, [portfolio, coins]);
-
-  /*
-   * ----------------------------------------
-   * NAVIGATION
-   * ----------------------------------------
-   */
-
-  function navigate(destination) {
-    setPage(destination);
-  }
-
-  /*
-   * ----------------------------------------
-   * TRADE DEMO PLACEHOLDER
-   * ----------------------------------------
-   *
-   * IMPORTANT:
-   * This is intentionally NOT a blockchain
-   * transaction yet.
-   *
-   * The next 2.1B stage will replace this with
-   * an actual testnet swap after contracts,
-   * token addresses, quote and transaction
-   * simulation are verified.
-   */
-
-  function openTrade(coin) {
+  const openTrade = (coin) => {
     setSelectedCoin(coin);
     setPage("Trade");
-  }
+  };
 
-  function executeDemoTrade() {
-    if (!selectedCoin) {
-      setWalletError(
-        "Select a token before creating an order."
-      );
-      return;
+  const menu = [
+    {
+      name: "Dashboard",
+      icon: "⌂"
+    },
+    {
+      name: "Markets",
+      icon: "◈"
+    },
+    {
+      name: "Trade",
+      icon: "⇄"
+    },
+    {
+      name: "Portfolio",
+      icon: "◫"
+    },
+    {
+      name: "Orders",
+      icon: "☷"
     }
-
-    const amount =
-      Number(tradeAmount || 0);
-
-    if (amount <= 0) {
-      setWalletError(
-        "Enter a valid test amount."
-      );
-      return;
-    }
-
-    const newOrder = {
-      id: Date.now(),
-      type: "TESTNET PREVIEW",
-      dex: selectedDex,
-      symbol: selectedCoin.symbol,
-      amount,
-      status: "Preview",
-      time: new Date().toLocaleString(),
-    };
-
-    setOrders((current) => [
-      newOrder,
-      ...current,
-    ]);
-
-    setTradeAmount("");
-
-    alert(
-      "Testnet preview created. No blockchain transaction was sent."
-    );
-  }
-
-  /*
-   * ----------------------------------------
-   * RISK SCORE
-   * ----------------------------------------
-   */
-
-  function getRiskScore(coin) {
-    const change =
-      Math.abs(
-        Number(
-          coin?.quote?.USD?.percent_change_24h ||
-            0
-        )
-      );
-
-    if (change >= 10) {
-      return {
-        label: "High",
-        score: 80,
-      };
-    }
-
-    if (change >= 5) {
-      return {
-        label: "Medium",
-        score: 55,
-      };
-    }
-
-    return {
-      label: "Lower",
-      score: 30,
-    };
-  }
-
-  /*
-   * ----------------------------------------
-   * UI
-   * ----------------------------------------
-   */
+  ];
 
   return (
     <div
       className={
         dark
           ? "app dark"
-          : "app"
+          : "app light"
       }
     >
       <header className="topbar">
         <div className="brand">
-          <div className="logo">
-            CP
+          <div className="brand-mark">
+            C
           </div>
 
           <div>
-            <strong>
-              CryptoPool
-            </strong>
-
-            <span>
-              Web3 Portfolio Platform
-            </span>
+            <strong>CryptoPool</strong>
+            <span>2.1 TESTNET</span>
           </div>
         </div>
 
         <div className="top-actions">
-          <div className="network-badge">
-            🧪 SEPOLIA TESTNET
+          <div className="network-pill">
+            <span></span>
+            Sepolia
           </div>
 
           <button
             className="theme-button"
             onClick={() =>
-              setDark((value) => !value)
+              setDark(!dark)
             }
           >
-            {dark ? "☀️" : "🌙"}
+            {dark ? "☀" : "☾"}
           </button>
 
-          {!wallet ? (
-            <button
-              className="primary-button"
-              onClick={connectWallet}
-              disabled={walletLoading}
-            >
-              {walletLoading
-                ? "Connecting..."
-                : "Connect Wallet"}
-            </button>
-          ) : (
-            <button
-              className="wallet-button"
-              onClick={disconnectWallet}
-            >
-              🟢 {shortAddress(walletAddress)}
-            </button>
-          )}
+          <AppKitButton />
         </div>
       </header>
 
-      <div className="testnet-banner">
-        <strong>
-          🧪 TESTNET MODE
-        </strong>
-
-        <span>
-          CryptoPool is currently connected to
-          Ethereum Sepolia. Do not use real funds.
-        </span>
-
-        <span>
-          Chain ID: {SEPOLIA_CHAIN_ID_DECIMAL}
-        </span>
-      </div>
-
-      {walletError && (
-        <div className="alert-box">
-          ⚠️ {walletError}
-        </div>
-      )}
-
       <div className="layout">
         <aside className="sidebar">
-          <button
-            className={
-              page === "Dashboard"
-                ? "nav active"
-                : "nav"
-            }
-            onClick={() =>
-              navigate("Dashboard")
-            }
-          >
-            🏠 Dashboard
-          </button>
-
-          <button
-            className={
-              page === "Markets"
-                ? "nav active"
-                : "nav"
-            }
-            onClick={() =>
-              navigate("Markets")
-            }
-          >
-            📈 Markets
-          </button>
-
-          <button
-            className={
-              page === "Trade"
-                ? "nav active"
-                : "nav"
-            }
-            onClick={() =>
-              navigate("Trade")
-            }
-          >
-            🔄 Trade
-          </button>
-
-          <button
-            className={
-              page === "Portfolio"
-                ? "nav active"
-                : "nav"
-            }
-            onClick={() =>
-              navigate("Portfolio")
-            }
-          >
-            💼 Portfolio
-          </button>
-
-          <button
-            className={
-              page === "Orders"
-                ? "nav active"
-                : "nav"
-            }
-            onClick={() =>
-              navigate("Orders")
-            }
-          >
-            📋 Orders
-          </button>
+          <nav>
+            {menu.map((item) => (
+              <button
+                key={item.name}
+                className={
+                  page === item.name
+                    ? "nav-item active"
+                    : "nav-item"
+                }
+                onClick={() =>
+                  setPage(item.name)
+                }
+              >
+                <span>{item.icon}</span>
+                {item.name}
+              </button>
+            ))}
+          </nav>
 
           <div className="sidebar-bottom">
-            <div className="security-card">
-              <strong>
-                🔐 Non-custodial
-              </strong>
+            <div className="testnet-box">
+              <div className="testnet-status">
+                <span></span>
+                TESTNET MODE
+              </div>
 
               <p>
-                CryptoPool never asks for your
-                seed phrase or private key.
+                Ethereum Sepolia
               </p>
+
+              <small>
+                No real funds
+              </small>
             </div>
           </div>
         </aside>
 
-        <main className="content">
+        <main>
           {page === "Dashboard" && (
-            <>
-              <section className="hero">
-                <div>
-                  <div className="eyebrow">
-                    CRYPTOPOOL 2.1
-                  </div>
-
-                  <h1>
-                    Testnet Web3
-                    <br />
-                    Trading Infrastructure
-                  </h1>
-
-                  <p>
-                    Connect your wallet and test
-                    CryptoPool safely on Sepolia
-                    before any mainnet integration.
-                  </p>
-
-                  <button
-                    className="primary-button large"
-                    onClick={() =>
-                      navigate("Trade")
-                    }
-                  >
-                    Open Testnet Trade
-                  </button>
-                </div>
-
-                <div className="hero-card">
-                  <div className="hero-card-title">
-                    Wallet Status
-                  </div>
-
-                  <div className="hero-number">
-                    {wallet
-                      ? "CONNECTED"
-                      : "NOT CONNECTED"}
-                  </div>
-
-                  <div className="hero-sub">
-                    {wallet
-                      ? shortAddress(
-                          walletAddress
-                        )
-                      : "Connect a Web3 wallet"}
-                  </div>
-                </div>
-              </section>
-
-              <section className="stats-grid">
-                <div className="stat-card">
-                  <span>
-                    Wallet
-                  </span>
-
-                  <strong>
-                    {wallet
-                      ? shortAddress(
-                          walletAddress
-                        )
-                      : "Not connected"}
-                  </strong>
-                </div>
-
-                <div className="stat-card">
-                  <span>
-                    Network
-                  </span>
-
-                  <strong>
-                    {chainId ===
-                    SEPOLIA_CHAIN_ID
-                      ? "Sepolia"
-                      : "Wrong / Unknown"}
-                  </strong>
-                </div>
-
-                <div className="stat-card">
-                  <span>
-                    Sepolia ETH
-                  </span>
-
-                  <strong>
-                    {formatNumber(
-                      walletBalance,
-                      6
-                    )}
-                  </strong>
-                </div>
-
-                <div className="stat-card">
-                  <span>
-                    Portfolio
-                  </span>
-
-                  <strong>
-                    {formatUSD(
-                      portfolioValue
-                    )}
-                  </strong>
-                </div>
-              </section>
-
-              <section className="section">
-                <div className="section-header">
-                  <div>
-                    <h2>
-                      Market Intelligence
-                    </h2>
-
-                    <p>
-                      Live crypto market data
-                      with a simple volatility
-                      indicator.
-                    </p>
-                  </div>
-
-                  <button
-                    className="secondary-button"
-                    onClick={loadMarket}
-                  >
-                    {loading
-                      ? "Updating..."
-                      : "Refresh"}
-                  </button>
-                </div>
-
-                {error && (
-                  <div className="muted-note">
-                    {error}
-                  </div>
-                )}
-
-                <div className="coin-grid">
-                  {coins
-                    .slice(0, 6)
-                    .map((coin) => {
-                      const risk =
-                        getRiskScore(coin);
-
-                      const change =
-                        Number(
-                          coin.quote?.USD
-                            ?.percent_change_24h ||
-                            0
-                        );
-
-                      return (
-                        <button
-                          key={coin.id}
-                          className="coin-card"
-                          onClick={() =>
-                            openTrade(
-                              coin
-                            )
-                          }
-                        >
-                          <div className="coin-top">
-                            <div>
-                              <strong>
-                                {coin.symbol}
-                              </strong>
-
-                              <span>
-                                {coin.name}
-                              </span>
-                            </div>
-
-                            <div className="risk-pill">
-                              {risk.label}
-                            </div>
-                          </div>
-
-                          <div className="coin-price">
-                            {formatUSD(
-                              coin
-                                .quote?.USD
-                                ?.price
-                            )}
-                          </div>
-
-                          <div
-                            className={
-                              change >= 0
-                                ? "positive"
-                                : "negative"
-                            }
-                          >
-                            {change >= 0
-                              ? "+"
-                              : ""}
-                            {change.toFixed(
-                              2
-                            )}
-                            %
-                          </div>
-                        </button>
-                      );
-                    })}
-                </div>
-              </section>
-            </>
+            <Dashboard
+              coins={coins}
+              loading={loading}
+              error={error}
+              onRefresh={loadMarket}
+              onTrade={openTrade}
+            />
           )}
 
           {page === "Markets" && (
-            <section className="section">
-              <div className="section-header">
-                <div>
-                  <h1>
-                    Top Crypto Markets
-                  </h1>
-
-                  <p>
-                    Market data from
-                    CoinMarketCap public API.
-                  </p>
-                </div>
-
-                <button
-                  className="secondary-button"
-                  onClick={loadMarket}
-                >
-                  Refresh
-                </button>
-              </div>
-
-              <input
-                className="search"
-                placeholder="Search Bitcoin, ETH, SOL..."
-                value={search}
-                onChange={(event) =>
-                  setSearch(
-                    event.target.value
-                  )
-                }
-              />
-
-              <div className="table-wrapper">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>#</th>
-                      <th>Asset</th>
-                      <th>Price</th>
-                      <th>24h</th>
-                      <th>Risk</th>
-                      <th></th>
-                    </tr>
-                  </thead>
-
-                  <tbody>
-                    {filteredCoins.map(
-                      (coin, index) => {
-                        const risk =
-                          getRiskScore(
-                            coin
-                          );
-
-                        const change =
-                          Number(
-                            coin.quote?.USD
-                              ?.percent_change_24h ||
-                              0
-                          );
-
-                        return (
-                          <tr
-                            key={
-                              coin.id
-                            }
-                          >
-                            <td>
-                              {index + 1}
-                            </td>
-
-                            <td>
-                              <strong>
-                                {
-                                  coin
-                                    .symbol
-                                }
-                              </strong>
-
-                              <span className="table-name">
-                                {
-                                  coin
-                                    .name
-                                }
-                              </span>
-                            </td>
-
-                            <td>
-                              {formatUSD(
-                                coin
-                                  .quote
-                                  ?.USD
-                                  ?.price
-                              )}
-                            </td>
-
-                            <td
-                              className={
-                                change >=
-                                0
-                                  ? "positive"
-                                  : "negative"
-                              }
-                            >
-                              {change >=
-                              0
-                                ? "+"
-                                : ""}
-                              {change.toFixed(
-                                2
-                              )}
-                              %
-                            </td>
-
-                            <td>
-                              <span className="risk-pill">
-                                {
-                                  risk.label
-                                }
-                              </span>
-                            </td>
-
-                            <td>
-                              <button
-                                className="small-button"
-                                onClick={() =>
-                                  openTrade(
-                                    coin
-                                  )
-                                }
-                              >
-                                Trade
-                              </button>
-                            </td>
-                          </tr>
-                        );
-                      }
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </section>
+            <Markets
+              coins={coins}
+              onTrade={openTrade}
+            />
           )}
 
           {page === "Trade" && (
-            <section className="section">
-              <div className="section-header">
-                <div>
-                  <h1>
-                    Testnet Trade
-                  </h1>
-
-                  <p>
-                    Prepare your testnet
-                    transaction.
-                  </p>
-                </div>
-
-                <div className="network-badge">
-                  🧪 Sepolia
-                </div>
-              </div>
-
-              <div className="trade-layout">
-                <div className="trade-card">
-                  <label>
-                    Select Asset
-                  </label>
-
-                  <select
-                    value={
-                      selectedCoin?.symbol ||
-                      ""
-                    }
-                    onChange={(event) => {
-                      const coin =
-                        coins.find(
-                          (item) =>
-                            item.symbol ===
-                            event.target
-                              .value
-                        );
-
-                      setSelectedCoin(
-                        coin || null
-                      );
-                    }}
-                  >
-                    <option value="">
-                      Select token
-                    </option>
-
-                    {coins
-                      .slice(0, 20)
-                      .map((coin) => (
-                        <option
-                          key={coin.id}
-                          value={
-                            coin.symbol
-                          }
-                        >
-                          {coin.symbol} —{" "}
-                          {coin.name}
-                        </option>
-                      ))}
-                  </select>
-
-                  <label>
-                    Test Amount
-                  </label>
-
-                  <input
-                    type="number"
-                    min="0"
-                    step="any"
-                    placeholder="0.00"
-                    value={
-                      tradeAmount
-                    }
-                    onChange={(event) =>
-                      setTradeAmount(
-                        event.target
-                          .value
-                      )
-                    }
-                  />
-
-                  <label>
-                    DEX
-                  </label>
-
-                  <div className="dex-grid">
-                    {DEXES.map(
-                      (dex) => (
-                        <button
-                          key={
-                            dex.name
-                          }
-                          className={
-                            selectedDex ===
-                            dex.name
-                              ? "dex-card selected"
-                              : "dex-card"
-                          }
-                          onClick={() =>
-                            setSelectedDex(
-                              dex.name
-                            )
-                          }
-                        >
-                          <strong>
-                            {
-                              dex.name
-                            }
-                          </strong>
-
-                          <span>
-                            {
-                              dex.description
-                            }
-                          </span>
-                        </button>
-                      )
-                    )}
-                  </div>
-
-                  <button
-                    className="primary-button full"
-                    onClick={
-                      executeDemoTrade
-                    }
-                  >
-                    Create Testnet
-                    Preview
-                  </button>
-
-                  <div className="warning-card">
-                    ⚠️ This button currently
-                    creates a transaction
-                    preview only. It does NOT
-                    send a blockchain transaction.
-                  </div>
-                </div>
-
-                <div className="info-card">
-                  <h3>
-                    Transaction Safety
-                  </h3>
-
-                  <div className="check">
-                    <span>✓</span>
-                    Wallet connection
-                  </div>
-
-                  <div className="check">
-                    <span>✓</span>
-                    Sepolia network
-                  </div>
-
-                  <div className="check">
-                    <span>✓</span>
-                    Non-custodial wallet
-                  </div>
-
-                  <div className="check pending">
-                    <span>○</span>
-                    Token verification
-                  </div>
-
-                  <div className="check pending">
-                    <span>○</span>
-                    Quote
-                  </div>
-
-                  <div className="check pending">
-                    <span>○</span>
-                    Slippage check
-                  </div>
-
-                  <div className="check pending">
-                    <span>○</span>
-                    Gas estimation
-                  </div>
-
-                  <div className="check pending">
-                    <span>○</span>
-                    Transaction simulation
-                  </div>
-
-                  <p className="muted-note">
-                    These remaining checks
-                    will be implemented before
-                    CryptoPool sends an actual
-                    testnet swap.
-                  </p>
-                </div>
-              </div>
-            </section>
+            <Trade
+              selectedCoin={selectedCoin}
+            />
           )}
 
           {page === "Portfolio" && (
-            <section className="section">
-              <div className="section-header">
-                <div>
-                  <h1>
-                    Portfolio
-                  </h1>
-
-                  <p>
-                    Non-custodial portfolio
-                    overview.
-                  </p>
-                </div>
-              </div>
-
-              <div className="portfolio-summary">
-                <span>
-                  Estimated value
-                </span>
-
-                <strong>
-                  {formatUSD(
-                    portfolioValue
-                  )}
-                </strong>
-              </div>
-
-              <div className="wallet-panel">
-                <h3>
-                  Connected Wallet
-                </h3>
-
-                {wallet ? (
-                  <>
-                    <div className="address">
-                      {walletAddress}
-                    </div>
-
-                    <div className="wallet-row">
-                      <span>
-                        Network
-                      </span>
-
-                      <strong>
-                        {chainId ===
-                        SEPOLIA_CHAIN_ID
-                          ? "Ethereum Sepolia"
-                          : "Wrong network"}
-                      </strong>
-                    </div>
-
-                    <div className="wallet-row">
-                      <span>
-                        ETH Balance
-                      </span>
-
-                      <strong>
-                        {formatNumber(
-                          walletBalance,
-                          6
-                        )}{" "}
-                        ETH
-                      </strong>
-                    </div>
-                  </>
-                ) : (
-                  <p>
-                    Connect your wallet to
-                    view testnet information.
-                  </p>
-                )}
-              </div>
-
-              <div className="empty-card">
-                <div className="empty-icon">
-                  💼
-                </div>
-
-                <h3>
-                  Testnet portfolio
-                </h3>
-
-                <p>
-                  Real token balances will be
-                  displayed here after the
-                  testnet swap module is
-                  implemented.
-                </p>
-              </div>
-            </section>
+            <Portfolio />
           )}
 
           {page === "Orders" && (
-            <section className="section">
-              <div className="section-header">
-                <div>
-                  <h1>
-                    Orders
-                  </h1>
-
-                  <p>
-                    CryptoPool testnet
-                    transaction previews.
-                  </p>
-                </div>
-              </div>
-
-              {orders.length === 0 ? (
-                <div className="empty-card">
-                  <div className="empty-icon">
-                    📋
-                  </div>
-
-                  <h3>
-                    No testnet orders
-                  </h3>
-
-                  <p>
-                    Your testnet transaction
-                    previews will appear here.
-                  </p>
-                </div>
-              ) : (
-                <div className="orders-list">
-                  {orders.map(
-                    (order) => (
-                      <div
-                        className="order-card"
-                        key={order.id}
-                      >
-                        <div>
-                          <strong>
-                            {
-                              order
-                                .symbol
-                            }
-                          </strong>
-
-                          <span>
-                            {
-                              order
-                                .dex
-                            }
-                          </span>
-                        </div>
-
-                        <div>
-                          {
-                            order
-                              .amount
-                          }
-                        </div>
-
-                        <div>
-                          {
-                            order
-                              .status
-                          }
-                        </div>
-
-                        <div>
-                          {
-                            order
-                              .time
-                          }
-                        </div>
-                      </div>
-                    )
-                  )}
-                </div>
-              )}
-            </section>
+            <Orders />
           )}
         </main>
       </div>
 
       <footer className="footer">
-        <span>
-          CryptoPool 2.1A
-        </span>
-
-        <span>
-          🧪 Sepolia Testnet
-        </span>
-
-        <span>
-          No private keys stored
-        </span>
-
-        <span>
-          No guaranteed returns
-        </span>
+        CryptoPool 2.1 · Ethereum Sepolia
+        Testnet · No guaranteed returns
       </footer>
     </div>
+  );
+}
+
+/* =========================================================
+   HELPERS
+   ========================================================= */
+
+function formatPrice(value) {
+  if (!Number.isFinite(value)) {
+    return "0.00";
+  }
+
+  if (value >= 1000) {
+    return value.toLocaleString(
+      "en-US",
+      {
+        maximumFractionDigits: 2
+      }
+    );
+  }
+
+  if (value >= 1) {
+    return value.toFixed(2);
+  }
+
+  return value.toFixed(6);
+}
+
+/* =========================================================
+   PROVIDERS
+   ========================================================= */
+
+function Root() {
+  return (
+    <WagmiProvider
+      config={wagmiAdapter.wagmiConfig}
+    >
+      <QueryClientProvider
+        client={queryClient}
+      >
+        <App />
+      </QueryClientProvider>
+    </WagmiProvider>
   );
 }
 
 createRoot(
   document.getElementById("root")
 ).render(
-  <App />
+  <React.StrictMode>
+    <Root />
+  </React.StrictMode>
 );
