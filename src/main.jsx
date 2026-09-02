@@ -3,6 +3,11 @@ import { createRoot } from "react-dom/client";
 import "./style.css";
 
 const API =
+  "https://pro-api.coinmarketcap.com/public-api";import React, { useEffect, useMemo, useState } from "react";
+import { createRoot } from "react-dom/client";
+import "./style.css";
+
+const API =
   "https://pro-api.coinmarketcap.com/public-api";
 
 const DEXES = [
@@ -103,14 +108,7 @@ function App() {
   const [coins, setCoins] = useState(FALLBACK);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [dark, setDark] = useState(true);
 
-  const [wallet, setWallet] = useState(false);
-
-  const [portfolio, setPortfolio] =
-    useState(INITIAL_PORTFOLIO);
-
-  const [orders, setOrders] = useState([]);
 
   const [search, setSearch] = useState("");
 
