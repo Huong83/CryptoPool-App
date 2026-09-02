@@ -39,7 +39,7 @@ import "./style.css";
 
   Do NOT put a seed phrase or private key here.
 */
-const projectId = "YOUR_REOWN_PROJECT_ID";
+const projectId = "PROJECT_ID_CUA_BAN";
 
 const queryClient = new QueryClient();
 
