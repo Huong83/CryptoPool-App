@@ -768,4 +768,774 @@ main {
   .footer p {
     text-align: left;
   }
+}* {
+  box-sizing: border-box;
+}
+
+:root {
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+  color: #e8edf7;
+  background: #070a10;
+  font-synthesis: none;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background: #070a10;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.app {
+  min-height: 100vh;
+  background: #f5f7fb;
+  color: #111827;
+  transition: 0.25s;
+}
+
+.app.dark {
+  background:
+    radial-gradient(circle at 20% 0%, #17203b 0, transparent 35%),
+    #070a10;
+  color: #e8edf7;
+}
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  min-height: 76px;
+  padding: 12px 5%;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  background: rgba(7,10,16,.82);
+  backdrop-filter: blur(18px);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  cursor: pointer;
+}
+
+.brandMark {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 13px;
+  background: linear-gradient(135deg,#7c3aed,#06b6d4);
+  color: white;
+  font-weight: 900;
+}
+
+.brand strong,
+.brand span {
+  display: block;
+}
+
+.brand strong {
+  font-size: 18px;
+}
+
+.brand span {
+  margin-top: 2px;
+  color: #8e99ad;
+  font-size: 10px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.nav {
+  display: flex;
+  gap: 4px;
+}
+
+.nav button,
+.iconButton {
+  border: 0;
+  background: transparent;
+  color: #8e99ad;
+}
+
+.nav button {
+  padding: 10px 13px;
+  border-radius: 10px;
+}
+
+.nav button:hover,
+.nav button.active {
+  color: white;
+  background: rgba(255,255,255,.07);
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.iconButton {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+}
+
+.iconButton:hover {
+  background: rgba(255,255,255,.08);
+}
+
+.walletButton,
+.primaryButton,
+.secondaryButton {
+  border-radius: 11px;
+  padding: 11px 16px;
+  font-weight: 800;
+}
+
+.walletButton,
+.primaryButton {
+  border: 0;
+  color: white;
+  background: linear-gradient(135deg,#7c3aed,#2563eb);
+}
+
+.secondaryButton {
+  border: 1px solid rgba(255,255,255,.12);
+  color: inherit;
+  background: rgba(255,255,255,.04);
+}
+
+.primaryButton:disabled {
+  opacity: .55;
+  cursor: wait;
+}
+
+main {
+  width: min(1180px, 90%);
+  margin: auto;
+}
+
+.hero {
+  min-height: 590px;
+  display: grid;
+  grid-template-columns: 1.15fr .85fr;
+  align-items: center;
+  gap: 70px;
+}
+
+.heroText {
+  max-width: 650px;
+}
+
+.eyebrow {
+  color: #8b7cff;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: .16em;
+}
+
+.hero h1 {
+  margin: 18px 0;
+  font-size: clamp(46px, 7vw, 82px);
+  line-height: .98;
+  letter-spacing: -.055em;
+}
+
+.hero h1 span {
+  background: linear-gradient(90deg,#a78bfa,#22d3ee);
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.hero p,
+.sectionHeading p {
+  color: #8e99ad;
+  line-height: 1.75;
+}
+
+.hero p {
+  max-width: 600px;
+  font-size: 17px;
+}
+
+.heroButtons {
+  display: flex;
+  gap: 12px;
+  margin-top: 28px;
+  flex-wrap: wrap;
+}
+
+.trustRow {
+  display: flex;
+  gap: 18px;
+  margin-top: 28px;
+  color: #8e99ad;
+  font-size: 12px;
+  flex-wrap: wrap;
+}
+
+.heroCard {
+  padding: 28px;
+  min-height: 350px;
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 28px;
+  background:
+    linear-gradient(145deg,rgba(124,58,237,.2),rgba(15,23,42,.7));
+  box-shadow: 0 30px 100px rgba(0,0,0,.35);
+}
+
+.cardTop,
+.coinTop,
+.coinBottom,
+.poolBottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.cardTop {
+  color: #8e99ad;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: .1em;
+}
+
+.liveDot {
+  color: #22c55e;
+}
+
+.heroPrice {
+  margin-top: 55px;
+  font-size: 44px;
+  font-weight: 900;
+}
+
+.heroCard small {
+  color: #8e99ad;
+}
+
+.miniBars {
+  height: 90px;
+  display: flex;
+  align-items: end;
+  gap: 5px;
+  margin-top: 40px;
+}
+
+.miniBar {
+  flex: 1;
+  min-height: 12px;
+  border-radius: 4px 4px 0 0;
+  background: linear-gradient(180deg,#8b5cf6,#06b6d4);
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(4,1fr);
+  gap: 14px;
+}
+
+.statCard,
+.featureCard,
+.coinCard,
+.portfolioCard,
+.dexPanel,
+.tradePanel {
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.035);
+  border-radius: 18px;
+}
+
+.statCard {
+  padding: 22px;
+}
+
+.statCard span,
+.statCard small {
+  display: block;
+  color: #8e99ad;
+}
+
+.statCard strong {
+  display: block;
+  margin: 8px 0;
+  font-size: 25px;
+}
+
+.section,
+.pageSection {
+  padding: 85px 0;
+}
+
+.sectionHeading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 25px;
+}
+
+.sectionHeading h2 {
+  margin: 7px 0;
+  font-size: 38px;
+  letter-spacing: -.035em;
+}
+
+.coinGrid {
+  display: grid;
+  grid-template-columns: repeat(4,1fr);
+  gap: 15px;
+}
+
+.coinCard {
+  padding: 19px;
+  color: inherit;
+  text-align: left;
+  transition: transform .2s, border-color .2s;
+}
+
+.coinCard:hover {
+  transform: translateY(-4px);
+  border-color: rgba(139,92,246,.6);
+}
+
+.coinIdentity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.coinIdentity strong,
+.coinIdentity small {
+  display: block;
+}
+
+.coinIdentity small {
+  color: #8e99ad;
+  margin-top: 3px;
+}
+
+.coinIcon,
+.largeCoinIcon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg,#312e81,#0891b2);
+  color: white;
+  font-weight: 900;
+}
+
+.rank {
+  color: #7f8aa0;
+  font-size: 12px;
+}
+
+.coinPrice {
+  margin: 26px 0 12px;
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.coinBottom {
+  color: #8e99ad;
+  font-size: 12px;
+}
+
+.change.positive,
+.positive {
+  color: #22c55e;
+}
+
+.change.negative,
+.negative {
+  color: #ef4444;
+}
+
+.tradeSmallButton {
+  width: 100%;
+  margin-top: 15px;
+  padding: 9px;
+  border: 0;
+  border-radius: 9px;
+  background: rgba(124,58,237,.16);
+  color: #b8a9ff;
+  font-weight: 800;
+}
+
+.featureGrid {
+  display: grid;
+  grid-template-columns: repeat(3,1fr);
+  gap: 15px;
+  padding-bottom: 85px;
+}
+
+.featureCard {
+  padding: 25px;
+}
+
+.featureIcon {
+  font-size: 28px;
+  color: #9b8cff;
+}
+
+.featureCard h3 {
+  margin-bottom: 8px;
+}
+
+.featureCard p {
+  color: #8e99ad;
+  line-height: 1.65;
+}
+
+.marketControls {
+  margin-bottom: 20px;
+}
+
+.marketControls input,
+.tradePanel input,
+.tradePanel select,
+.tradePanel label select {
+  width: 100%;
+  padding: 14px;
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 11px;
+  outline: none;
+  background: rgba(255,255,255,.045);
+  color: inherit;
+}
+
+.marketControls input:focus,
+.tradePanel input:focus,
+.tradePanel select:focus {
+  border-color: #8b5cf6;
+}
+
+.notice {
+  margin: 15px 0;
+  padding: 13px 16px;
+  border: 1px solid rgba(245,158,11,.25);
+  border-radius: 11px;
+  color: #fbbf24;
+  background: rgba(245,158,11,.08);
+}
+
+.globalNotice {
+  margin-top: 20px;
+}
+
+.tradeLayout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.tradePanel,
+.dexPanel {
+  padding: 25px;
+}
+
+.tradeMode {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  margin-bottom: 22px;
+  padding: 4px;
+  border-radius: 11px;
+  background: rgba(255,255,255,.05);
+}
+
+.tradeMode button {
+  padding: 12px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: #8e99ad;
+  font-weight: 900;
+}
+
+.tradeMode button.active {
+  color: white;
+  background: #7c3aed;
+}
+
+.tradePanel label {
+  display: block;
+  margin-top: 17px;
+  color: #8e99ad;
+  font-size: 13px;
+}
+
+.tradePanel label input,
+.tradePanel label select {
+  display: block;
+  margin-top: 7px;
+}
+
+.tradeQuote {
+  display: flex;
+  justify-content: space-between;
+  padding: 15px 0;
+  border-bottom: 1px solid rgba(255,255,255,.07);
+  color: #8e99ad;
+}
+
+.tradeQuote strong {
+  color: white;
+}
+
+.fullButton {
+  width: 100%;
+  margin-top: 22px;
+}
+
+.demoWarning {
+  margin-top: 18px;
+  padding: 13px;
+  border: 1px solid rgba(239,68,68,.2);
+  border-radius: 11px;
+  color: #fca5a5;
+  background: rgba(239,68,68,.07);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.dexPanel h3 {
+  margin: 8px 0 18px;
+}
+
+.dexCard {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 42px 1fr 20px;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 10px;
+  padding: 15px;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 13px;
+  text-align: left;
+  color: inherit;
+  background: rgba(255,255,255,.025);
+}
+
+.dexCard.selected {
+  border-color: #8b5cf6;
+  background: rgba(124,58,237,.12);
+}
+
+.dexIcon {
+  font-size: 27px;
+}
+
+.dexCard strong,
+.dexCard small {
+  display: block;
+}
+
+.dexCard small {
+  margin-top: 3px;
+  color: #8e99ad;
+  font-size: 11px;
+}
+
+.smallText {
+  color: #7f8aa0;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.portfolioGrid {
+  display: grid;
+  grid-template-columns: repeat(4,1fr);
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.portfolioCard {
+  padding: 22px;
+}
+
+.portfolioCard span,
+.portfolioCard small {
+  display: block;
+  color: #8e99ad;
+}
+
+.portfolioCard strong {
+  display: block;
+  margin: 10px 0;
+  font-size: 20px;
+}
+
+.ordersTable {
+  overflow: auto;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 15px;
+}
+
+.orderHeader,
+.orderRow {
+  display: grid;
+  grid-template-columns: 1.4fr .6fr .7fr .9fr 1fr 1fr;
+  min-width: 720px;
+  gap: 15px;
+  padding: 15px;
+}
+
+.orderHeader {
+  color: #8e99ad;
+  background: rgba(255,255,255,.04);
+  font-size: 12px;
+}
+
+.orderRow {
+  border-top: 1px solid rgba(255,255,255,.06);
+  font-size: 13px;
+}
+
+.placeholder {
+  padding: 90px 25px;
+  text-align: center;
+  border: 1px dashed rgba(255,255,255,.13);
+  border-radius: 20px;
+}
+
+.placeholderIcon {
+  margin-bottom: 15px;
+  font-size: 45px;
+  color: #8b7cff;
+}
+
+.placeholder h2 {
+  font-size: 32px;
+}
+
+.placeholder p {
+  max-width: 550px;
+  margin: auto;
+  color: #8e99ad;
+  line-height: 1.7;
+}
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 25px;
+  padding: 40px 5%;
+  border-top: 1px solid rgba(255,255,255,.08);
+  color: #8e99ad;
+}
+
+.footer strong,
+.footer span {
+  display: block;
+}
+
+.footer strong {
+  color: white;
+}
+
+.footer p {
+  text-align: right;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+@media (max-width: 950px) {
+  .header {
+    flex-wrap: wrap;
+  }
+
+  .nav {
+    order: 3;
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  .hero {
+    grid-template-columns: 1fr;
+    gap: 30px;
+    padding: 60px 0;
+  }
+
+  .coinGrid {
+    grid-template-columns: repeat(2,1fr);
+  }
+
+  .statsGrid,
+  .portfolioGrid {
+    grid-template-columns: repeat(2,1fr);
+  }
+
+  .tradeLayout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 620px) {
+  main {
+    width: 92%;
+  }
+
+  .header {
+    padding: 10px 4%;
+  }
+
+  .headerActions {
+    width: 100%;
+  }
+
+  .walletButton {
+    flex: 1;
+  }
+
+  .hero h1 {
+    font-size: 48px;
+  }
+
+  .heroCard {
+    min-height: 290px;
+  }
+
+  .coinGrid,
+  .statsGrid,
+  .portfolioGrid,
+  .featureGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .section,
+  .pageSection {
+    padding: 55px 0;
+  }
+
+  .sectionHeading {
+    align-items: start;
+    flex-direction: column;
+  }
+
+  .footer {
+    flex-direction: column;
+  }
+
+  .footer p {
+    text-align: left;
+  }
 }
