@@ -85,7 +85,7 @@ function Dashboard({ onNavigate }) {
       </div>
       <div className="hero-visual">
         <div className="orb orb-a" /><div className="orb orb-b" />
-        <div className="portfolio-float"><span>PORTFOLIO VALUE</span><strong>$10,248.60</strong><small>+4.82% <b>24H</b></small></div>
+        <div className="portfolio-float"><span>DEMO PORTFOLIO VALUE</span><strong>$10,248.60</strong><small>+4.82% <b>24H</b></small></div>
         <div className="mini-bars"><i/><i/><i/><i/><i/><i/><i/><i/></div>
       </div>
     </section>
@@ -93,7 +93,7 @@ function Dashboard({ onNavigate }) {
     <section className="stats-row">
       <div><span>Network</span><strong><i className="live-dot"/> Ethereum Sepolia</strong></div>
       <div><span>Assets tracked</span><strong>6 <small>crypto assets</small></strong></div>
-      <div><span>Platform status</span><strong className="positive">● Operational</strong></div>
+      <div><span>MVP status</span><strong>● Testnet demo</strong></div>
     </section>
 
     <SectionTitle eyebrow="MARKET" title="Thị trường" action="Xem tất cả" onClick={() => onNavigate("markets")} />
