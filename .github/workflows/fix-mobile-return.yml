@@ -1,0 +1,43 @@
+name: Patch mobile wallet return
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Add web redirect metadata for mobile wallets
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('src/main.jsx')
+          s = p.read_text()
+          old = 'const metadata = { name: "CryptoPool", description: "CryptoPool — Ethereum Sepolia testnet", url: "https://huong83.github.io/CryptoPool-App/", icons: ["https://huong83.github.io/CryptoPool-App/icon.svg"] };'
+          new = 'const metadata = { name: "CryptoPool", description: "CryptoPool — Ethereum Sepolia testnet", url: "https://huong83.github.io/CryptoPool-App/", icons: ["https://huong83.github.io/CryptoPool-App/icon.svg"], redirect: { universal: "https://huong83.github.io/CryptoPool-App/" } };'
+          if old in s:
+              p.write_text(s.replace(old, new, 1))
+          else:
+              print('Metadata already patched or source changed; nothing to do.')
+          PY
+
+      - name: Commit patch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/main.jsx
+          if git diff --cached --quiet; then
+            echo 'No changes to commit.'
+            exit 0
+          fi
+          git commit -m 'fix: improve mobile wallet return metadata'
+          git push
