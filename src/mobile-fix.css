@@ -3,3 +3,5 @@
   .mobile-nav button { min-width: 0; padding-left: 2px; padding-right: 2px; }
   .mobile-nav small { font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 }
+
+.balance-box{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:9px 0 18px;padding:14px 15px;border:1px solid #2a3645;border-radius:12px;background:#0a1017}.balance-box strong{font-size:22px;letter-spacing:-.4px}.balance-box button{width:40px;height:40px;flex:0 0 40px;border:1px solid #3a4859;border-radius:10px;background:#151e29;color:#eef2f7;font-size:20px;font-weight:900;line-height:1}.balance-box button:hover{background:#202b38;border-color:#607086}.balance-box button:disabled{opacity:.45;cursor:not-allowed}.input-with-action{display:flex;gap:8px;align-items:stretch}.input-with-action .large-address-input{flex:1;min-width:0}.input-with-action>button{border:1px solid #344253;background:#151e29;color:#dce3eb;border-radius:10px;padding:0 13px;font-weight:800}.input-with-action>button:hover{background:#202b38}
