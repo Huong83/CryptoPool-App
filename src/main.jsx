@@ -12,7 +12,7 @@ const projectId = import.meta.env.VITE_REOWN_PROJECT_ID || "ff3f925ac7d1161fbe37
 const networks = [sepolia];
 const queryClient = new QueryClient();
 const SEPOLIA_ID = 11155111;
-const metadata = { name: "CryptoPool", description: "CryptoPool — Ethereum Sepolia testnet", url: "https://huong83.github.io/CryptoPool-App/", icons: ["https://huong83.github.io/CryptoPool-App/icon.svg"] };
+const metadata = { name: "CryptoPool", description: "CryptoPool — Ethereum Sepolia testnet", url: "https://huong83.github.io/CryptoPool-App/", icons: ["https://huong83.github.io/CryptoPool-App/icon.svg"], redirect: { universal: "https://huong83.github.io/CryptoPool-App/" } };
 const wagmiAdapter = new WagmiAdapter({ networks, projectId, ssr: true });
 createAppKit({ adapters: [wagmiAdapter], networks, projectId, metadata, defaultNetwork: sepolia, allWallets: "SHOW", features: { analytics: false, email: true, socials: ["google"], emailShowWallets: true }, themeMode: "dark" });
 
