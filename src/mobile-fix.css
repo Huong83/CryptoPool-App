@@ -1,0 +1,5 @@
+@media (max-width: 860px) {
+  .mobile-nav { grid-template-columns: repeat(6, minmax(0, 1fr)) !important; }
+  .mobile-nav button { min-width: 0; padding-left: 2px; padding-right: 2px; }
+  .mobile-nav small { font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+}
