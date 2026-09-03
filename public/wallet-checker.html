@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CryptoPool — Kiểm tra ví Sepolia</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#070b12;color:#eef2f7;font-family:Inter,system-ui,sans-serif}.wrap{max-width:760px;margin:auto;padding:28px 18px 60px}.brand{font-weight:900;font-size:20px}.sub{color:#748195;font-size:12px;margin:5px 0 26px}.card{background:#0d141d;border:1px solid #202a37;border-radius:18px;padding:20px;margin-bottom:14px}.label{font-size:9px;letter-spacing:1.5px;color:#748195;font-weight:800;margin-bottom:9px}.input{width:100%;background:#080e15;color:#fff;border:1px solid #344253;border-radius:12px;padding:15px;font-size:14px;outline:0}.input:focus{border-color:#8ca7ff}.actions{display:flex;gap:9px;margin-top:11px}.btn{border:1px solid #344253;background:#141d28;color:#eef2f7;border-radius:10px;padding:11px 14px;font-weight:800}.primary{background:#eef2f7;color:#080c12;border-color:#eef2f7}.status{margin-top:11px;font-size:11px;color:#6e7b8d}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.asset{background:#0a1017;border:1px solid #202a37;border-radius:14px;padding:16px}.asset span{display:block;color:#718096;font-size:10px}.asset strong{display:block;font-size:23px;margin-top:8px}.links{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}.links a{color:#9fb5ff;font-size:11px}.ok{color:#5ddba6}.err{color:#ff9189}@media(max-width:600px){.grid{grid-template-columns:1fr}.wrap{padding:20px 13px 45px}.card{padding:16px}.input{font-size:13px}.actions .btn{flex:1}}
+</style>
+</head>
+<body><main class="wrap">
+<div class="brand">◈ CryptoPool</div><div class="sub">Kiểm tra nhanh ví · Ethereum Sepolia Testnet · dữ liệu đọc trực tiếp từ blockchain</div>
+<section class="card"><div class="label">ĐỊA CHỈ VÍ</div><input id="address" class="input" spellcheck="false" placeholder="0x…"><div class="actions"><button id="check" class="btn primary">Kiểm tra số dư</button><button id="clear" class="btn">Xóa</button></div><div id="status" class="status">Không cần kết nối ví để kiểm tra.</div></section>
+<section id="result" class="card" hidden><div class="label">SỐ DƯ THỰC TRÊN SEPOLIA</div><div class="grid"><div class="asset"><span>Ethereum</span><strong id="eth">—</strong></div><div class="asset"><span>ERC-20 test token</span><strong id="token">—</strong></div></div><div id="links" class="links"></div></section>
+<section class="card"><div class="label">MINH BẠCH</div><div class="status">CryptoPool chỉ đọc số dư công khai của địa chỉ. Không yêu cầu seed phrase, private key hoặc quyền ký giao dịch. Sepolia là testnet, không phải tiền thật.</div></section>
+</main>
+<script>
+const RPC='https://ethereum-sepolia-rpc.publicnode.com';
+const TOKEN='0x66edc2ceb15790bb4b2e726dc4c827c7455e48e0';
+const $=id=>document.getElementById(id);
+function valid(a){return /^0x[a-fA-F0-9]{40}$/.test(a)}
+async function rpc(method,params){const r=await fetch(RPC,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method,params})});if(!r.ok)throw Error('RPC không phản hồi');const j=await r.json();if(j.error)throw Error(j.error.message||'RPC error');return j.result}
+function pad(a){return a.slice(2).padStart(64,'0')}
+async function check(){const a=$('address').value.trim();$('status').className='status';$('status').textContent='Đang đọc blockchain…';$('result').hidden=true;if(!valid(a)){ $('status').className='status err';$('status').textContent='Địa chỉ Ethereum không hợp lệ.';return }try{const wei=BigInt(await rpc('eth_getBalance',[a,'latest']));const raw=BigInt(await rpc('eth_call',[{to:TOKEN,data:'0x70a08231'+pad(a)},'latest']));const dec=BigInt(await rpc('eth_call',[{to:TOKEN,data:'0x313ce567'},'latest']));const d=Number(dec);const token=Number(raw)/10**d;$('eth').textContent=(Number(wei)/1e18).toFixed(6)+' ETH';$('token').textContent=token.toLocaleString('en-US',{maximumFractionDigits:6})+' test token';$('links').innerHTML='<a target="_blank" rel="noopener" href="https://sepolia.etherscan.io/address/'+a+'">Xem địa chỉ trên Sepolia Etherscan ↗</a><a target="_blank" rel="noopener" href="https://sepolia.etherscan.io/token/'+TOKEN+'?a='+a+'">Xem token ↗</a>';$('result').hidden=false;$('status').className='status ok';$('status').textContent='✓ Đã đọc thành công từ Ethereum Sepolia · '+new Date().toLocaleTimeString('vi-VN')}catch(e){$('status').className='status err';$('status').textContent='Không đọc được blockchain: '+e.message}}
+$('check').onclick=check;$('clear').onclick=()=>{$('address').value='';$('result').hidden=true;$('status').className='status';$('status').textContent='Không cần kết nối ví để kiểm tra.';$('address').focus()};$('address').addEventListener('keydown',e=>{if(e.key==='Enter')check()});
+</script></body></html>
