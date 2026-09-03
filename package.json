@@ -1,6 +1,6 @@
 {
   "name": "cryptopool-app",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -18,5 +18,6 @@
     "viem": "^2.34.0",
     "vite": "^8.1.0",
     "wagmi": "^2.16.0"
-  }
+  },
+  "devDependencies": {}
 }
