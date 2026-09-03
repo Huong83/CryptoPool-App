@@ -1,0 +1,6 @@
+# Protect automation and deployment configuration from accidental changes.
+# Repository settings must require CODEOWNER review for this to block direct/PR changes.
+.github/workflows/ @Huong83
+.github/ @Huong83
+package.json @Huong83
+vite.config.* @Huong83
