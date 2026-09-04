@@ -1,0 +1,88 @@
+/* CryptoPool Pro brand lockup — presentation only.
+   Keeps wallet, market, chart and transaction logic untouched. */
+.brand strong{
+  font-size:0 !important;
+  line-height:1 !important;
+}
+.brand strong::before{
+  content:"CryptoPool Pro";
+  display:block;
+  font-size:15px;
+  line-height:1.15;
+  letter-spacing:-.25px;
+  font-weight:850;
+}
+.brand span{
+  font-size:0 !important;
+  letter-spacing:0 !important;
+  text-transform:none !important;
+  color:transparent !important;
+  margin-top:5px !important;
+  line-height:1.15 !important;
+}
+.brand span::before{
+  content:"Digital Asset";
+  display:block;
+  font-size:9px;
+  line-height:1.15;
+  letter-spacing:.55px;
+  font-weight:650;
+  color:#9aa7b8;
+  text-transform:none;
+}
+.brand span::after{
+  content:"Web3 Asset Management Platform";
+  display:block;
+  margin-top:4px;
+  font-size:7.5px;
+  line-height:1.2;
+  letter-spacing:.15px;
+  font-weight:550;
+  color:#59687a;
+  text-transform:none;
+  white-space:nowrap;
+}
+.mobile-brand strong{
+  font-size:0 !important;
+  line-height:1 !important;
+}
+.mobile-brand strong::before{
+  content:"CryptoPool Pro";
+  display:block;
+  font-size:13px;
+  line-height:1.15;
+  letter-spacing:-.15px;
+  font-weight:850;
+}
+.mobile-brand span{
+  font-size:0 !important;
+  letter-spacing:0 !important;
+  text-transform:none !important;
+  color:transparent !important;
+  margin-top:4px !important;
+  line-height:1.15 !important;
+}
+.mobile-brand span::before{
+  content:"Digital Asset";
+  display:block;
+  font-size:8px;
+  line-height:1.15;
+  letter-spacing:.35px;
+  font-weight:650;
+  color:#9aa7b8;
+}
+.mobile-brand span::after{
+  content:"Web3 Asset Management Platform";
+  display:block;
+  margin-top:2px;
+  font-size:6.5px;
+  line-height:1.15;
+  letter-spacing:0;
+  font-weight:550;
+  color:#59687a;
+  text-transform:none;
+  white-space:nowrap;
+}
+@media (max-width:520px){
+  .mobile-brand span::after{font-size:6px}
+}
