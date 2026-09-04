@@ -1,27 +1,41 @@
-# CryptoPool 3.1 — Acquisition-Ready MVP
+# CryptoPool PRO — Acquisition-Ready Web3 Asset
 
 ## Asset overview
-CryptoPool is an early-stage Web3/DeFi product and technology asset. This package contains the current React/Vite frontend MVP, testnet wallet-connection foundation, UI/UX, deployment configuration, and buyer-facing technical documentation.
+CryptoPool PRO is an early-stage Web3/DeFi product and technology asset. The package contains a React/Vite frontend, live market-data layer, non-custodial wallet connection, Ethereum Sepolia testnet transaction flow, responsive UI, deployment automation, smart-contract workspace, and buyer-facing technical documentation.
 
-**Current status:** Early-stage MVP / pre-revenue / testnet demo.
+**Current commercial status:** Early-stage MVP / pre-revenue / testnet.
 
-## Verified technical scope
+## Current verified scope
 - React 19 + Vite 8 frontend
-- Reown AppKit + Wagmi + Viem wallet-connection foundation
-- Ethereum Sepolia testnet configuration
-- Responsive dashboard, markets, pools, trade-simulation, portfolio and wallet views
-- GitHub Pages deployment workflow
-- Environment-file convention for Reown configuration
+- Reown AppKit + Wagmi + Viem wallet integration
+- Ethereum Sepolia testnet network configuration
+- Non-custodial wallet connection flow
+- Sender ETH balance displayed in-app
+- Receiver ETH balance lookup on Sepolia
+- Real Sepolia ETH transfer flow requiring the user's own wallet signature
+- Transaction status and Sepolia Etherscan verification link
+- Live market data for supported assets through public market-data providers
+- PI price sourced from external market-data providers; no invented PI price
+- SDA remains visible as an asset but is not assigned a fabricated market price when no verified source is available
+- Multi-timeframe market charts
+- Dashboard, Markets, Pools, Portfolio, Wallet and Trade views
+- Dark Web3 UI designed for desktop and mobile
+- GitHub Actions + GitHub Pages deployment
 
 ## Important product status
-This is **not** a production DeFi protocol. The current Trade flow is a simulation and does not submit blockchain transactions. Market prices and portfolio figures shown in the UI are demo data. There is currently no production smart-contract deployment, backend, database, transaction indexer, real-money investment flow, or audited financial infrastructure included in this package.
+This is **not yet a production DeFi protocol** and should not be marketed as one. The current blockchain interaction is explicitly on Ethereum Sepolia testnet. There is no production vault, yield strategy, mainnet investment flow, audited protocol, backend database, transaction indexer, or verified revenue stream included in the current package.
 
-These limitations are intentional and documented so a buyer can evaluate the asset accurately.
+The project intentionally avoids fabricated APY, TVL, revenue, user numbers, token balances, or market prices. This makes the asset easier for a serious buyer to evaluate during technical due diligence.
+
+## Wallet and transaction security boundary
+CryptoPool does not request or store seed phrases or private keys. Users approve transactions in their connected wallet. The frontend can display public on-chain balances and transaction status, while signing authority remains with the user's wallet.
+
+Before any production deployment, the buyer should replace the public frontend Reown project identifier with a buyer-controlled project, configure the production domain, review wallet-provider settings, and complete an independent smart-contract/security review. Role-based access control and least-privilege administration should be used for production contracts where applicable. OpenZeppelin documents role-based access control and stronger admin-management patterns for production contract systems. 
 
 ## Reown configuration
-The Reown Project ID is a public frontend identifier, not a private key. The current source contains the existing project identifier used by the deployed demo. A buyer should replace it with a project identifier controlled by the buyer before production deployment and configure the production domain in the Reown dashboard.
+The Reown Project ID is a public frontend identifier, not a private key. The buyer should replace the existing project identifier with one controlled by the buyer before production deployment and configure the production domain in the Reown dashboard.
 
-Never place private keys, seed phrases, wallet secrets, or server credentials in this repository.
+**Never place private keys, seed phrases, wallet secrets, RPC secrets, or server credentials in this repository.**
 
 ## Local setup
 1. Install Node.js 20+.
@@ -31,7 +45,7 @@ Never place private keys, seed phrases, wallet secrets, or server credentials in
 5. Run `npm run build` for a production build.
 
 ## Deployment
-The included GitHub Actions workflow builds the Vite application and deploys `dist/` to GitHub Pages. The Vite base path is `/CryptoPool-App/`.
+The included GitHub Actions workflow builds the Vite application and deploys `dist/` to GitHub Pages. GitHub Pages supports custom workflows using `actions/upload-pages-artifact` and `actions/deploy-pages`; a buyer can later move the frontend to another hosting provider or a verified custom domain. 
 
 ## Acquisition documents
 - `ACQUISITION_ASSET_REGISTER.md` — assets included/excluded and transfer notes
@@ -42,9 +56,11 @@ The included GitHub Actions workflow builds the Vite application and deploys `di
 - `IP_TRANSFER_NOTE.md` — ownership/transfer items to verify before closing
 - `CHANGELOG.md` — package preparation notes
 
-## Commercial positioning
-Recommended positioning: **CryptoPool — Web3 / DeFi Product & Technology Asset**.
+## Recommended commercial positioning
+**CryptoPool PRO — Web3 / DeFi Product & Technology Asset**
 
-Recommended public status: **Early-stage MVP, pre-revenue, testnet/demo**.
+Recommended public status: **Early-stage MVP, pre-revenue, Ethereum Sepolia testnet**.
 
-Do not claim revenue, active users, TVL, audited smart contracts, production transaction volume, token issuance, or partnerships unless separately verified and documented.
+The strongest value proposition is the working product foundation: wallet UX, live market layer, testnet transaction experience, responsive Web3 interface, deployment automation, and a documented path toward a production protocol.
+
+Do not claim revenue, active users, TVL, audited smart contracts, production transaction volume, token issuance, partnerships, or guaranteed investment returns unless separately verified and documented.
