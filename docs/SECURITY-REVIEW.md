@@ -28,15 +28,13 @@ A client-side JavaScript application cannot be made unreadable after delivery to
 
 ## Dependency reproducibility gate
 
-`package.json` currently uses version ranges and the repository does not currently contain `package-lock.json`. Therefore the dependency tree is **not yet fully reproducible** from the repository alone.
+`package-lock.json` is now committed and the Pages workflow uses `npm ci`. The reproducible-release gate is **closed for the current repository revision**. GitHub documents `npm ci` as the reproducible install path when a lockfile is committed. citeturn0search0
 
-**Release gate:** before calling a release fully reproducible, run `npm install --package-lock-only` (or a clean `npm install`) with the intended Node/npm toolchain, verify the build, and commit the generated `package-lock.json`.
-
-Do not manually invent a lockfile.
+Do not manually modify or invent lockfile entries. Any future dependency change should regenerate the lockfile with the intended Node/npm toolchain and verify the build before release.
 
 ## P0 buyer-demo security/quality gate
 
-Before final buyer handover, verify on a clean environment:
+The automated Pages workflow has successfully completed build and deployment for the release-preparation changes. Before final buyer handover, manual clean-environment acceptance testing is still required:
 
 1. Production build completes successfully.
 2. GitHub Pages deployment completes successfully.
