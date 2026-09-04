@@ -1,74 +1,208 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ReactDOM from "react-dom/client";
 import { createAppKit, AppKitButton, useAppKitAccount, useAppKitNetwork } from "@reown/appkit/react";
 import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
 import { sepolia } from "@reown/appkit/networks";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { WagmiProvider, useBalance, useReadContract, useSendTransaction, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
-import { parseEther, formatEther, formatUnits, isAddress, parseUnits } from "viem";
+import { WagmiProvider, useBalance, useSendTransaction, useWaitForTransactionReceipt } from "wagmi";
+import { formatEther, isAddress, parseEther } from "viem";
 import "./style.css";
 
-const projectId = import.meta.env.VITE_REOWN_PROJECT_ID || "ff3f925ac7d1161fbe3707bc77b3d9fe";
+const PROJECT_ID = import.meta.env.VITE_REOWN_PROJECT_ID || "ff3f925ac7d1161fbe3707bc77b3d9fe";
 const SEPOLIA_ID = 11155111;
-const networks = [sepolia];
+const BASE = "/CryptoPool-App/";
 const queryClient = new QueryClient();
-const TEST_RECIPIENT = "0x9BB4aBC72f2c4818F66C895Cd1a9de2c827C5C06";
-const TEST_TOKEN = "0x66edc2ceb15790bb4b2e726dc4c827c7455e48e0";
-const metadata = { name: "CryptoPool", description: "CryptoPool — Ethereum Sepolia testnet", url: "https://huong83.github.io/CryptoPool-App/", icons: ["https://huong83.github.io/CryptoPool-App/icon.svg"] };
-const wagmiAdapter = new WagmiAdapter({ networks, projectId, ssr: true });
-createAppKit({ adapters: [wagmiAdapter], networks, projectId, metadata, defaultNetwork: sepolia, allWallets: "SHOW", features: { analytics: false, email: true, socials: ["google"], emailShowWallets: true }, themeMode: "dark" });
+const networks = [sepolia];
+const metadata = { name: "CryptoPool PRO", description: "CryptoPool PRO — real-time crypto market and Ethereum Sepolia testnet dashboard", url: "https://huong83.github.io/CryptoPool-App/", icons: ["https://huong83.github.io/CryptoPool-App/icon.svg"] };
+const adapter = new WagmiAdapter({ networks, projectId: PROJECT_ID, ssr: true });
+createAppKit({ adapters: [adapter], networks, projectId: PROJECT_ID, metadata, defaultNetwork: sepolia, allWallets: "SHOW", features: { analytics: false, email: true, socials: ["google"], emailShowWallets: true }, themeMode: "dark" });
 
-const ERC20_ABI = [
-  { type: "function", name: "balanceOf", stateMutability: "view", inputs: [{ name: "account", type: "address" }], outputs: [{ type: "uint256" }] },
-  { type: "function", name: "decimals", stateMutability: "view", inputs: [], outputs: [{ type: "uint8" }] },
-  { type: "function", name: "symbol", stateMutability: "view", inputs: [], outputs: [{ type: "string" }] },
-  { type: "function", name: "transfer", stateMutability: "nonpayable", inputs: [{ name: "to", type: "address" }, { name: "amount", type: "uint256" }], outputs: [{ type: "bool" }] }
+const ASSETS = [
+  { symbol: "BTC", name: "Bitcoin", binance: "btcusdt", tone: "orange", cg: "bitcoin" },
+  { symbol: "ETH", name: "Ethereum", binance: "ethusdt", tone: "purple", cg: "ethereum" },
+  { symbol: "BNB", name: "BNB", binance: "bnbusdt", tone: "gold", cg: "binancecoin" },
+  { symbol: "SOL", name: "Solana", binance: "solusdt", tone: "green", cg: "solana" },
+  { symbol: "XRP", name: "XRP", binance: "xrpusdt", tone: "blue", cg: "ripple" },
+  { symbol: "ADA", name: "Cardano", binance: "adausdt", tone: "cyan", cg: "cardano" },
+  { symbol: "DOGE", name: "Dogecoin", binance: "dogeusdt", tone: "yellow", cg: "dogecoin" },
+  { symbol: "AVAX", name: "Avalanche", binance: "avaxusdt", tone: "red", cg: "avalanche-2" },
+  { symbol: "LINK", name: "Chainlink", binance: "linkusdt", tone: "indigo", cg: "chainlink" },
+  { symbol: "UNI", name: "Uniswap", binance: "uniusdt", tone: "pink", cg: "uniswap" }
 ];
-const assets = [
-  { symbol: "BTC", name: "Bitcoin", price: 64280.12, change: 2.14, tone: "orange" },
-  { symbol: "ETH", name: "Ethereum", price: 2487.42, change: 1.73, tone: "purple" },
-  { symbol: "USDC", name: "USD Coin", price: 1, change: .01, tone: "blue" },
-  { symbol: "SOL", name: "Solana", price: 151.36, change: 3.91, tone: "green" },
-  { symbol: "LINK", name: "Chainlink", price: 23.42, change: -.62, tone: "blue" },
-  { symbol: "UNI", name: "Uniswap", price: 7.91, change: 1.22, tone: "pink" }
+const FALLBACK = { BTC: 100000, ETH: 4000, BNB: 650, SOL: 180, XRP: 2.2, ADA: .8, DOGE: .2, AVAX: 35, LINK: 25, UNI: 10 };
+const FALLBACK_CHANGE = { BTC: 0, ETH: 0, BNB: 0, SOL: 0, XRP: 0, ADA: 0, DOGE: 0, AVAX: 0, LINK: 0, UNI: 0 };
+const POOLS = [
+  { name: "Core BTC", tag: "Conservative", assets: "BTC", note: "Capital preservation demo" },
+  { name: "ETH Growth", tag: "Balanced", assets: "ETH", note: "Ethereum ecosystem demo" },
+  { name: "Multi Asset", tag: "Balanced", assets: "BTC · ETH · SOL", note: "Diversified demo basket" },
+  { name: "Stable Reserve", tag: "Low volatility", assets: "USDC", note: "Stablecoin demo allocation" }
 ];
-const pools = [
-  { name: "Core BTC", tag: "Conservative", assets: "BTC", icon: "₿", note: "Capital preservation focus" },
-  { name: "ETH Growth", tag: "Balanced", assets: "ETH", icon: "Ξ", note: "Ethereum ecosystem exposure" },
-  { name: "Multi Asset", tag: "Balanced", assets: "BTC · ETH · SOL", icon: "◈", note: "Diversified demo basket" },
-  { name: "Stable Reserve", tag: "Low volatility", assets: "USDC", icon: "$", note: "Stablecoin demo allocation" }
-];
-function shorten(v) { return v ? `${v.slice(0, 6)}…${v.slice(-4)}` : ""; }
-function money(v) { return Number.isFinite(v) ? (v >= 1000 ? v.toLocaleString("en-US", { maximumFractionDigits: 2 }) : v.toFixed(v < 2 ? 4 : 2)) : "0.00"; }
-function PageHeader({ eyebrow, title, text, action }) { return <div className="page-header"><div><div className="kicker">{eyebrow}</div><h1>{title}</h1><p>{text}</p></div>{action}</div>; }
-function SectionTitle({ eyebrow, title, action, onClick }) { return <div className="section-title"><div><div className="kicker">{eyebrow}</div><h2>{title}</h2></div>{action && <button onClick={onClick}>{action} <span>→</span></button>}</div>; }
-function AssetCard({ asset }) { return <article className="asset-card"><div className="asset-head"><div className={`asset-icon ${asset.tone}`}>{asset.symbol[0]}</div><div><strong>{asset.symbol}</strong><span>{asset.name}</span></div><span className={asset.change >= 0 ? "change positive" : "change negative"}>{asset.change >= 0 ? "+" : ""}{asset.change.toFixed(2)}%</span></div><div className="asset-price">${money(asset.price)}</div><div className="spark"><span/><span/><span/><span/><span/><span/><span/></div></article>; }
-function PoolCard({ pool }) { return <article className="pool-card"><div className="pool-icon">{pool.icon}</div><div className="pool-content"><div className="pool-line"><h3>{pool.name}</h3><span>{pool.tag}</span></div><p>{pool.note}</p><div className="pool-meta"><span>{pool.assets}</span><strong>DEMO</strong></div></div></article>; }
-function Check({ label, value, good }) { return <div className="check"><span className={good ? "check-good" : "check-bad"}>{good ? "✓" : "!"}</span><div><b>{label}</b><small>{value}</small></div></div>; }
-function LiveEth({ address }) { const { data, isLoading } = useBalance({ address, chainId: SEPOLIA_ID, query: { enabled: Boolean(address) } }); return <>{isLoading ? "Đang đọc…" : data ? `${Number(formatEther(data.value)).toFixed(6)} ETH` : "—"}</>; }
-function Dashboard({ go }) { const { address } = useAppKitAccount(); return <div className="page"><section className="hero-card-main"><div className="hero-copy"><div className="kicker"><span className="live-dot"/> DIGITAL ASSET PLATFORM</div><h1>Quản lý tài sản số<br/><em>một cách chuyên nghiệp.</em></h1><p>CryptoPool là giao diện quản lý danh mục và kiểm thử tài sản số trên Ethereum Sepolia. Kết nối ví trên máy tính hoặc điện thoại trong vài giây.</p><div className="hero-actions"><AppKitButton/><button className="ghost-button" onClick={() => go("markets")}>Xem thị trường <span>→</span></button></div><div className="trust-row"><span>✓ Non-custodial</span><span>✓ Testnet only</span><span>✓ Không lưu seed phrase</span></div></div><div className="hero-visual" aria-hidden="true"><div className="orb orb-a"/><div className="orb orb-b"/><div className="portfolio-float"><span>SEPOLIA ETH BALANCE</span><strong><LiveEth address={address}/></strong><small>{address ? "Số dư thật của ví testnet" : "Kết nối ví để đọc số dư"}</small></div><div className="mini-bars"><i/><i/><i/><i/><i/><i/><i/><i/></div></div></section><section className="stats-row"><div><span>Network</span><strong><i className="live-dot"/> Ethereum Sepolia</strong></div><div><span>Assets tracked</span><strong>6 <small>crypto assets</small></strong></div><div><span>Wallet balance</span><strong><LiveEth address={address}/></strong></div></section><SectionTitle eyebrow="MARKET" title="Thị trường" action="Xem tất cả" onClick={() => go("markets")}/><div className="asset-grid">{assets.map(a => <AssetCard key={a.symbol} asset={a}/>)}</div><SectionTitle eyebrow="CRYPTOPool" title="Pool mẫu" action="Khám phá" onClick={() => go("pools")}/><div className="pool-grid">{pools.map(p => <PoolCard key={p.name} pool={p}/>)}</div><div className="notice"><span>◉</span><div><strong>Chế độ thử nghiệm</strong><p>Demo trên Sepolia. Chưa kích hoạt đầu tư bằng tiền thật và không có cam kết lợi nhuận.</p></div></div></div>; }
-function Markets({ go }) { const [q, setQ] = useState(""); const filtered = assets.filter(a => `${a.symbol} ${a.name}`.toLowerCase().includes(q.toLowerCase())); return <div className="page"><PageHeader eyebrow="MARKETS" title="Tài sản crypto" text="Theo dõi giá tham khảo trước khi sử dụng các tính năng testnet." action={<button className="ghost-button" onClick={() => go("trade")}>Mở Trade →</button>}/><div className="toolbar"><label className="search"><span>⌕</span><input aria-label="Tìm tài sản" value={q} onChange={e => setQ(e.target.value)} placeholder="Tìm tài sản…"/></label><span className="muted">Dữ liệu demo</span></div><div className="market-table"><div className="market-row header"><span>Asset</span><span>Price</span><span>24h</span><span>Status</span></div>{filtered.map(a => <div className="market-row" key={a.symbol}><span className="asset-cell"><b>{a.symbol}</b><small>{a.name}</small></span><strong>${money(a.price)}</strong><span className={a.change >= 0 ? "positive" : "negative"}>{a.change >= 0 ? "+" : ""}{a.change.toFixed(2)}%</span><span className="table-status">Tracked</span></div>)}</div></div>; }
-function Trade() {
-  const { address, isConnected } = useAppKitAccount(); const { chainId } = useAppKitNetwork(); const goodNetwork = Number(chainId) === SEPOLIA_ID;
-  const { data: balance, isLoading: balanceLoading, refetch: refetchBalance } = useBalance({ address, chainId: SEPOLIA_ID, query: { enabled: Boolean(address) } });
-  const { data: ethHash, error: ethError, isPending: ethPending, sendTransaction } = useSendTransaction();
-  const { isLoading: ethConfirming, isSuccess: ethConfirmed } = useWaitForTransactionReceipt({ hash: ethHash, confirmations: 1 });
-  const { writeContractAsync } = useWriteContract();
-  const [recipient, setRecipient] = useState(TEST_RECIPIENT); const [amount, setAmount] = useState(""); const [tokenAddress, setTokenAddress] = useState(TEST_TOKEN); const [tokenAmount, setTokenAmount] = useState(""); const [tokenHash, setTokenHash] = useState(""); const [tokenBusy, setTokenBusy] = useState(false); const [tokenError, setTokenError] = useState(""); const [ethBusy, setEthBusy] = useState(false);
-  const validRecipient = isAddress(recipient); const validToken = isAddress(tokenAddress); const eth = balance ? Number(formatEther(balance.value)) : 0; const ethAmount = Number(amount); const enough = Boolean(balance) && ethAmount > 0 && ethAmount + 0.0005 < eth;
-  const { data: decimals } = useReadContract({ address: validToken ? tokenAddress : undefined, abi: ERC20_ABI, functionName: "decimals", chainId: SEPOLIA_ID, query: { enabled: validToken } });
-  const { data: symbol } = useReadContract({ address: validToken ? tokenAddress : undefined, abi: ERC20_ABI, functionName: "symbol", chainId: SEPOLIA_ID, query: { enabled: validToken } });
-  const { data: tokenBalance, refetch: refetchTokenBalance } = useReadContract({ address: validToken ? tokenAddress : undefined, abi: ERC20_ABI, functionName: "balanceOf", args: address ? [address] : undefined, chainId: SEPOLIA_ID, query: { enabled: Boolean(address && validToken && goodNetwork) } });
-  useEffect(() => { if (ethConfirmed) { refetchBalance(); setEthBusy(false); } }, [ethConfirmed, refetchBalance]);
-  useEffect(() => { if (ethError) setEthBusy(false); }, [ethError]);
-  async function sendEth() { if (ethBusy || ethPending || ethConfirming || !isConnected || !goodNetwork || !validRecipient || !enough) return; setEthBusy(true); try { sendTransaction({ to: recipient, value: parseEther(amount), chainId: SEPOLIA_ID }); } catch { setEthBusy(false); } }
-  async function sendToken() { if (!isConnected || !goodNetwork || !validToken || !validRecipient || !tokenAmount || typeof decimals !== "number" || tokenBusy) return; setTokenBusy(true); setTokenError(""); setTokenHash(""); try { const h = await writeContractAsync({ address: tokenAddress, abi: ERC20_ABI, functionName: "transfer", args: [recipient, parseUnits(tokenAmount, decimals)], chainId: SEPOLIA_ID }); setTokenHash(h); await refetchTokenBalance(); } catch (e) { setTokenError(e?.shortMessage || e?.message || "Giao dịch token bị hủy hoặc thất bại."); } finally { setTokenBusy(false); } }
-  const tokenDisplay = typeof tokenBalance === "bigint" && typeof decimals === "number" ? formatUnits(tokenBalance, decimals) : "—"; const ethErrorText = ethError?.shortMessage || ethError?.message || ""; const ethLocked = ethBusy || ethPending || ethConfirming;
-  return <div className="page"><PageHeader eyebrow="SEPOLIA TRANSACTION" title="Gửi tài sản testnet" text="Gửi ETH hoặc ERC-20 bằng giao dịch blockchain thật trên Ethereum Sepolia. Bạn tự xác nhận trong ví." action={<AppKitButton/>}/><div className="trade-layout"><div className="trade-box"><div className="trade-label">GỬI ETH</div><div className="balance-box"><strong>{balanceLoading ? "Đang đọc…" : balance ? `${eth.toFixed(6)} ETH` : "—"}</strong><button type="button" onClick={() => refetchBalance()} disabled={!address || ethLocked}>↻</button></div><div className="trade-label">SỐ LƯỢNG ETH</div><input className="amount" inputMode="decimal" value={amount} onChange={e => setAmount(e.target.value.replace(/[^0-9.]/g, ""))} placeholder="0.001" aria-label="Số lượng ETH Sepolia"/><div className="trade-label">ĐỊA CHỈ NHẬN ETH</div><div className="input-with-action"><input className="recipient-input large-address-input" value={recipient} onChange={e => setRecipient(e.target.value)} placeholder="0x…" aria-label="Địa chỉ nhận"/><button type="button" onClick={() => setRecipient("")}>Xóa</button></div><button className="primary-button" disabled={!isConnected || !goodNetwork || !validRecipient || !enough || ethLocked} onClick={sendEth}>{ethConfirmed ? "✓ ETH đã xác nhận" : ethConfirming ? "Đang xác nhận trên blockchain…" : ethLocked ? "Đang mở/xác nhận trong ví…" : !isConnected ? "Kết nối ví để gửi" : !goodNetwork ? "Chuyển sang Sepolia" : !validRecipient ? "Địa chỉ nhận không hợp lệ" : !enough ? "Không đủ ETH sau khi chừa gas" : "Gửi ETH Sepolia"}</button>{ethHash && <div className="tx-result"><b>ETH Transaction</b><a href={`https://sepolia.etherscan.io/tx/${ethHash}`} target="_blank" rel="noreferrer">{shorten(ethHash)} ↗</a></div>}{ethErrorText && <div className="tx-error">{ethErrorText}</div>}<div className="trade-divider">ERC-20 TESTNET</div><div className="trade-token-card"><div className="trade-label">TOKEN CONTRACT</div><input className="recipient-input large-address-input" value={tokenAddress} onChange={e => setTokenAddress(e.target.value.trim())} placeholder="0x…" aria-label="Token contract"/><div className="token-summary"><span>{symbol ? String(symbol) : "Token"}</span><strong>{tokenDisplay}</strong></div><div className="trade-label">SỐ LƯỢNG TOKEN</div><input className="amount token-amount-input" inputMode="decimal" value={tokenAmount} onChange={e => setTokenAmount(e.target.value.replace(/[^0-9.]/g, ""))} placeholder="0.1" aria-label="Số lượng token"/><button className="primary-button" disabled={!isConnected || !goodNetwork || !validToken || !validRecipient || !tokenAmount || typeof decimals !== "number" || tokenBusy} onClick={sendToken}>{tokenBusy ? "Đang chờ ví…" : !isConnected ? "Kết nối ví để gửi token" : !goodNetwork ? "Chuyển sang Sepolia" : typeof decimals !== "number" ? "Đang đọc token…" : "Gửi token ERC-20"}</button>{tokenHash && <div className="tx-result"><b>Token Transaction</b><a href={`https://sepolia.etherscan.io/tx/${tokenHash}`} target="_blank" rel="noreferrer">{shorten(tokenHash)} ↗</a></div>}{tokenError && <div className="tx-error">{tokenError}</div>}<div className="token-help">Số dư là số dư thật của ví với contract đang chọn. Nếu hiển thị 0, ví chưa có token đó.</div></div><div className="inline-warning">Testnet only · Không gửi ETH thật · Không cung cấp seed phrase/private key</div></div><div className="checks"><h3>Transaction checks</h3><Check label="Wallet" value={isConnected ? shorten(address) : "Not connected"} good={isConnected}/><Check label="Network" value={goodNetwork ? "Ethereum Sepolia · 11155111" : `Chain ${chainId || "?"}`} good={goodNetwork}/><Check label="ETH balance" value={balance ? `${eth.toFixed(6)} ETH` : "Chưa đọc được"} good={Boolean(balance)}/><Check label="Recipient" value={validRecipient ? shorten(recipient) : "Địa chỉ chưa hợp lệ"} good={validRecipient}/><Check label="ETH gas reserve" value="0.0005 ETH reserved" good={enough}/><Check label="Token" value={validToken ? `${symbol || "đang đọc…"} · ${tokenDisplay}` : "Contract chưa hợp lệ"} good={validToken}/></div></div></div>;
+
+function money(v) {
+  if (!Number.isFinite(v)) return "—";
+  if (v < 0.01) return v.toFixed(6);
+  if (v < 2) return v.toFixed(4);
+  if (v < 1000) return v.toLocaleString("en-US", { maximumFractionDigits: 4 });
+  return v.toLocaleString("en-US", { maximumFractionDigits: 2 });
 }
-function ERC20Balance() { const { address, isConnected } = useAppKitAccount(); const { chainId } = useAppKitNetwork(); const [token, setToken] = useState(TEST_TOKEN); const valid = isAddress(token); const enabled = Boolean(address && valid && Number(chainId) === SEPOLIA_ID); const { data: bal, isLoading: balLoading, error: balError, refetch } = useReadContract({ address: valid ? token : undefined, abi: ERC20_ABI, functionName: "balanceOf", args: address ? [address] : undefined, chainId: SEPOLIA_ID, query: { enabled } }); const { data: dec, error: decError } = useReadContract({ address: valid ? token : undefined, abi: ERC20_ABI, functionName: "decimals", chainId: SEPOLIA_ID, query: { enabled: valid } }); const { data: sym, error: symError } = useReadContract({ address: valid ? token : undefined, abi: ERC20_ABI, functionName: "symbol", chainId: SEPOLIA_ID, query: { enabled: valid } }); const display = typeof bal === "bigint" && typeof dec === "number" ? formatUnits(bal, dec) : "—"; return <div className="token-wallet-panel"><div className="token-panel-head"><div><div className="trade-label">TOKEN BALANCE</div><strong>Số dư ERC-20 trên Sepolia</strong></div><span className="network-tag good">Sepolia</span></div><p>Contract mẫu được điền sẵn. Bạn có thể xóa và nhập contract khác.</p><input className="recipient-input large-address-input" value={token} onChange={e => setToken(e.target.value.trim())} placeholder="Token contract 0x…" aria-label="Token contract"/><div className="wallet-info token-wallet-info"><div><span>Token</span><strong>{sym ? String(sym) : isConnected && valid ? "Đang đọc…" : "—"}</strong></div><div><span>Số dư</span><strong>{balLoading ? "Đang đọc…" : display}</strong></div><div><span>Contract</span><strong>{valid ? shorten(token) : "—"}</strong></div></div>{isConnected && Number(chainId) === SEPOLIA_ID && valid && <button className="ghost-button" type="button" onClick={() => refetch()}>↻ Cập nhật token balance</button>}{!isConnected && <small>Kết nối ví trước.</small>}{isConnected && Number(chainId) !== SEPOLIA_ID && <small>Chuyển ví sang Ethereum Sepolia.</small>}{(balError || decError || symError) && <small className="negative token-error-note">Không đọc được contract này trên Sepolia.</small>}</div>; }
-function WalletPage() { const { address, isConnected, status } = useAppKitAccount(); const { chainId } = useAppKitNetwork(); const { data: balance, isLoading, refetch } = useBalance({ address, chainId: SEPOLIA_ID, query: { enabled: Boolean(address) } }); const [copied, setCopied] = useState(false); const good = Number(chainId) === SEPOLIA_ID; async function copy() { if (!address) return; try { await navigator.clipboard.writeText(address); setCopied(true); setTimeout(() => setCopied(false), 1500); } catch {} } return <div className="page"><PageHeader eyebrow="WALLET" title="Ví của bạn" text="Kết nối không lưu ký. Private key và seed phrase không được yêu cầu." action={<AppKitButton/>}/><div className="wallet-page-card">{isConnected ? <><div className="connected-banner"><span className="big-check">✓</span><div><strong>Wallet connected</strong><span>{status === "connected" ? "Đã kết nối thành công" : "Đang đồng bộ…"}</span></div></div><div className="address-line wallet-address-large"><span>{address}</span><button type="button" onClick={copy}>{copied ? "Đã copy" : "Copy"}</button></div><div className="wallet-info"><div><span>Network</span><strong className={good ? "positive" : "negative"}>{good ? "Ethereum Sepolia" : `Chain ${chainId || "?"}`}</strong></div><div><span>Chain ID</span><strong>{chainId || "—"}</strong></div><div><span>Sepolia ETH</span><strong>{isLoading ? "Đang đọc…" : balance ? `${Number(formatEther(balance.value)).toFixed(6)} ETH` : "0.000000 ETH"}</strong></div></div><button className="ghost-button" type="button" onClick={() => refetch()}>↻ Cập nhật số dư</button>{!good && <div className="network-warning">⚠️ Vui lòng chuyển ví sang Ethereum Sepolia.</div>}<ERC20Balance/><div className="notice"><span>◎</span><div><strong>Gửi token</strong><p>Vào Trade để chọn token, nhập số lượng và tự xác nhận giao dịch trong ví.</p></div></div></> : <div className="empty-wallet"><div className="wallet-symbol">◎</div><h2>Kết nối ví để bắt đầu</h2><p>Chọn MetaMask, Trust Wallet, WalletConnect hoặc phương thức được hỗ trợ trong AppKit.</p><AppKitButton/><div className="wallet-features"><span>✓ Mobile friendly</span><span>✓ Non-custodial</span><span>✓ Sepolia testnet</span></div></div>}</div></div>; }
-function Portfolio() { const { address, isConnected } = useAppKitAccount(); const { data: balance, isLoading } = useBalance({ address, chainId: SEPOLIA_ID, query: { enabled: Boolean(address) } }); const eth = balance ? Number(formatEther(balance.value)) : 0; return <div className="page"><PageHeader eyebrow="PORTFOLIO" title="Danh mục" text="Tổng quan số dư thật của ví trên Sepolia và dữ liệu demo." action={<AppKitButton/>}/><div className="portfolio-hero"><div><span>Sepolia ETH balance</span><strong>{isLoading ? "Đang đọc…" : isConnected ? `${eth.toFixed(6)} ETH` : "—"}</strong><b className="positive">Testnet balance</b></div><div className="portfolio-chart"><i/><i/><i/><i/><i/><i/><i/><i/><i/></div></div><div className="portfolio-grid"><div><span>ETH balance</span><strong>{isConnected ? `${eth.toFixed(6)} ETH` : "—"}</strong></div><div><span>Network</span><strong>Ethereum Sepolia</strong></div><div><span>Wallet</span><strong>{isConnected ? shorten(address) : "Not connected"}</strong></div></div><div className="notice"><span>◎</span><div><strong>Số dư thực tế</strong><p>Số dư ETH ở đây được đọc trực tiếp từ blockchain Sepolia. Giá trị USD và pool vẫn là dữ liệu demo.</p></div></div></div>; }
-function Pools() { return <div className="page"><PageHeader eyebrow="CRYPTOPool" title="Pool mẫu" text="Các chiến lược minh họa cho sản phẩm; chưa có tiền thật."/><div className="pool-grid large">{pools.map(p => <PoolCard key={p.name} pool={p}/>)}</div><div className="notice"><span>◉</span><div><strong>Demo only</strong><p>Pool hiện chỉ là giao diện minh họa; chưa nhận tiền thật và không hứa hẹn lợi nhuận.</p></div></div></div>; }
-function App() { const [tab, setTab] = useState("dashboard"); const [theme, setTheme] = useState("dark"); useEffect(() => { document.documentElement.dataset.theme = theme; }, [theme]); const content = useMemo(() => { const go = setTab; if (tab === "markets") return <Markets go={go}/>; if (tab === "trade") return <Trade/>; if (tab === "portfolio") return <Portfolio/>; if (tab === "wallet") return <WalletPage/>; if (tab === "pools") return <Pools/>; return <Dashboard go={go}/>; }, [tab]); const items = [["dashboard", "⌂", "Tổng quan"], ["markets", "◈", "Thị trường"], ["pools", "◇", "Pools"], ["trade", "⇄", "Trade"], ["portfolio", "▣", "Danh mục"], ["wallet", "◎", "Ví"]]; return <div className="app-shell"><aside className="sidebar"><div className="brand"><div className="brand-mark">C</div><div><strong>CryptoPool</strong><span>Digital Assets</span></div></div><div className="sidebar-section"><span className="nav-label">WORKSPACE</span><nav>{items.map(([id, icon, label]) => <button key={id} className={tab === id ? "active" : ""} onClick={() => setTab(id)}><span>{icon}</span>{label}</button>)}</nav></div><div className="sidebar-bottom"><div className="wallet-mini"><div className="wallet-mini-top"><span className="status-dot"/><span>Wallet</span></div><p>Kết nối ví để xem tài khoản testnet.</p><div className="wallet-mini-button"><AppKitButton/></div></div><button className="theme-switch" onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>{theme === "dark" ? "☼  Light mode" : "☾  Dark mode"}</button></div></aside><main><header className="topbar"><div className="mobile-brand"><div className="brand-mark">C</div><div><strong>CryptoPool</strong><span>Digital Assets</span></div></div><div className="topbar-actions"><span className="network-chip"><i/> Sepolia</span><button className="icon-button" onClick={() => setTheme(theme === "dark" ? "light" : "dark")} aria-label="Toggle theme">{theme === "dark" ? "☼" : "☾"}</button><AppKitButton/></div></header>{content}<footer>CryptoPool · Ethereum Sepolia · Testnet</footer></main><nav className="mobile-nav" aria-label="Điều hướng mobile">{items.map(([id, icon, label]) => <button key={id} className={tab === id ? "active" : ""} onClick={() => setTab(id)}><span>{icon}</span><small>{label}</small></button>)}</nav></div>; }
-ReactDOM.createRoot(document.getElementById("root")).render(<React.StrictMode><WagmiProvider config={wagmiAdapter.wagmiConfig}><QueryClientProvider client={queryClient}><App/></QueryClientProvider></WagmiProvider></React.StrictMode>);
+function shorten(v) { return v ? `${v.slice(0, 6)}…${v.slice(-4)}` : ""; }
+function timeLabel(ts) { return ts ? new Date(ts).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "—"; }
+function seededPoints(price, change) {
+  const end = Number(price) || 1;
+  const drift = Number(change) || 0;
+  return Array.from({ length: 28 }, (_, i) => end * (1 - drift / 100 * (1 - i / 27)) * (1 + Math.sin(i * 1.7) * 0.003 + Math.cos(i * .63) * 0.002));
+}
+
+function useRealtimeMarket() {
+  const [data, setData] = useState(() => Object.fromEntries(ASSETS.map(a => [a.symbol, { ...a, price: FALLBACK[a.symbol], change: FALLBACK_CHANGE[a.symbol], previous: FALLBACK[a.symbol], updatedAt: 0, source: "fallback" }])));
+  const [connected, setConnected] = useState(false);
+  const [lastUpdate, setLastUpdate] = useState(0);
+  const socketRef = useRef(null);
+  const retryRef = useRef(null);
+
+  const apply = useCallback((symbol, price, change, source = "Binance WebSocket") => {
+    setData(prev => ({ ...prev, [symbol]: { ...prev[symbol], price, previous: prev[symbol]?.price ?? price, change: Number.isFinite(change) ? change : prev[symbol]?.change ?? 0, updatedAt: Date.now(), source } }));
+    setLastUpdate(Date.now());
+  }, []);
+
+  useEffect(() => {
+    let alive = true;
+    const connect = () => {
+      if (!alive) return;
+      try {
+        const streams = ASSETS.map(a => `${a.binance}@ticker`).join("/");
+        const ws = new WebSocket(`wss://stream.binance.com:9443/stream?streams=${streams}`);
+        socketRef.current = ws;
+        ws.onopen = () => alive && setConnected(true);
+        ws.onmessage = event => {
+          try {
+            const x = JSON.parse(event.data)?.data;
+            const asset = ASSETS.find(a => a.binance === x?.s?.toLowerCase());
+            if (!asset) return;
+            apply(asset.symbol, Number(x.c), Number(x.P), "Binance WebSocket");
+          } catch {}
+        };
+        ws.onerror = () => { try { ws.close(); } catch {} };
+        ws.onclose = () => { if (alive) { setConnected(false); retryRef.current = setTimeout(connect, 4000); } };
+      } catch { setConnected(false); retryRef.current = setTimeout(connect, 4000); }
+    };
+    connect();
+    return () => { alive = false; clearTimeout(retryRef.current); try { socketRef.current?.close(); } catch {} };
+  }, [apply]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const loadFallback = async () => {
+      try {
+        const ids = ASSETS.map(a => a.cg).join(",");
+        const r = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}&price_change_percentage=24h`, { headers: { accept: "application/json" } });
+        if (!r.ok) return;
+        const rows = await r.json();
+        if (cancelled) return;
+        rows.forEach(x => {
+          const a = ASSETS.find(v => v.cg === x.id);
+          if (a) apply(a.symbol, Number(x.current_price), Number(x.price_change_percentage_24h), "CoinGecko");
+        });
+      } catch {}
+    };
+    loadFallback();
+    const id = setInterval(loadFallback, 60000);
+    return () => { cancelled = true; clearInterval(id); };
+  }, [apply]);
+  return { data, connected, lastUpdate };
+}
+
+function useChart(asset) {
+  const [points, setPoints] = useState(() => seededPoints(asset.price, asset.change));
+  const [loading, setLoading] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    fetch(`https://api.binance.com/api/v3/klines?symbol=${asset.binance.toUpperCase()}&interval=1h&limit=48`)
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then(rows => { if (!cancelled) setPoints(rows.map(x => Number(x[4]))); })
+      .catch(() => { if (!cancelled) setPoints(seededPoints(asset.price, asset.change)); })
+      .finally(() => !cancelled && setLoading(false));
+    return () => { cancelled = true; };
+  }, [asset.binance, asset.price, asset.change]);
+  return { points, loading };
+}
+
+function MiniChart({ points, large = false }) {
+  const w = large ? 760 : 180, h = large ? 260 : 52, pad = large ? 12 : 3;
+  const min = Math.min(...points), max = Math.max(...points), range = max - min || 1;
+  const d = points.map((p, i) => `${i ? "L" : "M"}${pad + i * ((w - pad * 2) / Math.max(points.length - 1, 1))},${h - pad - ((p - min) / range) * (h - pad * 2)}`).join(" ");
+  return <svg className={large ? "chart-large" : "chart-mini"} viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" aria-label="price chart"><path d={d} fill="none" stroke="currentColor" strokeWidth={large ? 2.5 : 2} vectorEffect="non-scaling-stroke" /></svg>;
+}
+
+function AssetCard({ asset, onOpen }) {
+  const rising = asset.change >= 0;
+  return <button className="asset-card asset-click" onClick={() => onOpen(asset)} aria-label={`Mở biểu đồ ${asset.name}`}><div className="asset-head"><div className={`asset-icon ${asset.tone}`}>{asset.symbol[0]}</div><div><strong>{asset.symbol}</strong><span>{asset.name}</span></div><span className={rising ? "change positive" : "change negative"}>{rising ? "+" : ""}{Number(asset.change || 0).toFixed(2)}%</span></div><div className="asset-price">${money(asset.price)}</div><MiniChart points={seededPoints(asset.price, asset.change)} /><div className="asset-live"><span className={asset.source?.includes("WebSocket") ? "live-pulse" : ""}>{asset.source?.includes("WebSocket") ? "LIVE" : "Market"}</span><small>{timeLabel(asset.updatedAt)}</small></div></button>;
+}
+
+function Header({ title, text, action }) { return <div className="page-header"><div><div className="kicker">CRYPTOPool PRO</div><h1>{title}</h1><p>{text}</p></div>{action}</div>; }
+function SectionTitle({ title, action, onClick }) { return <div className="section-title"><h2>{title}</h2>{action && <button onClick={onClick}>{action} <span>→</span></button>}</div>; }
+function PoolCard({ pool }) { return <article className="pool-card"><div className="pool-icon">◈</div><div className="pool-content"><div className="pool-line"><h3>{pool.name}</h3><span>{pool.tag}</span></div><p>{pool.note}</p><div className="pool-meta"><span>{pool.assets}</span><strong>DEMO</strong></div></div></article>; }
+
+function Dashboard({ market, go, openAsset }) {
+  const { address } = useAppKitAccount();
+  const liveAssets = Object.values(market.data);
+  return <div className="page"><section className="hero-card-main"><div className="hero-copy"><div className="kicker"><span className="live-dot"/> DIGITAL ASSET PLATFORM</div><h1>Quản lý tài sản số<br/><em>một cách chuyên nghiệp.</em></h1><p>CryptoPool PRO theo dõi 10 tài sản crypto với dữ liệu thị trường cập nhật trực tiếp, biểu đồ và tín hiệu tăng/giảm. Ví vẫn hoạt động trên Ethereum Sepolia testnet.</p><div className="hero-actions"><AppKitButton/><button className="ghost-button" onClick={() => go("markets")}>Xem thị trường <span>→</span></button></div><div className="trust-row"><span>✓ Non-custodial</span><span>✓ 10 assets live</span><span>✓ Testnet only</span></div></div><div className="hero-visual"><div className="orb orb-a"/><div className="orb orb-b"/><div className="portfolio-float"><span>MARKET STREAM</span><strong>{market.connected ? "LIVE" : "CONNECTING"}</strong><small>{market.connected ? "Binance WebSocket" : "Đang tìm nguồn dữ liệu"}</small></div><div className="mini-bars"><i/><i/><i/><i/><i/><i/><i/><i/></div></div></section><section className="stats-row"><div><span>Market feed</span><strong><i className={`live-dot ${market.connected ? "" : "offline"}`}/> {market.connected ? "Live" : "Fallback"}</strong></div><div><span>Assets tracked</span><strong>10 <small>crypto assets</small></strong></div><div><span>Wallet</span><strong>{address ? shorten(address) : "Not connected"}</strong></div></section><SectionTitle title="Thị trường" action="Xem tất cả" onClick={() => go("markets")}/><div className="asset-grid">{liveAssets.slice(0, 6).map(a => <AssetCard key={a.symbol} asset={a} onOpen={openAsset}/>)}</div><SectionTitle title="Pool mẫu" action="Khám phá" onClick={() => go("pools")}/><div className="pool-grid">{POOLS.map(p => <PoolCard key={p.name} pool={p}/>)}</div><div className="notice"><span>◉</span><div><strong>Dữ liệu thị trường trực tiếp</strong><p>Giá thị trường được lấy từ nguồn dữ liệu bên ngoài. Tính năng đầu tư/lợi nhuận vẫn là demo và không phải lời hứa lợi nhuận.</p></div></div></div>;
+}
+
+function Markets({ market, openAsset, go }) {
+  const [q, setQ] = useState("");
+  const list = Object.values(market.data).filter(a => `${a.symbol} ${a.name}`.toLowerCase().includes(q.toLowerCase()));
+  return <div className="page"><Header title="Tài sản crypto" text={`10 tài sản • ${market.connected ? "giá đang cập nhật trực tiếp" : "đang dùng nguồn dự phòng"} • cập nhật ${timeLabel(market.lastUpdate)}`} action={<button className="ghost-button" onClick={() => go("trade")}>Mở Trade →</button>}/><div className="toolbar"><label className="search"><span>⌕</span><input aria-label="Tìm tài sản" value={q} onChange={e => setQ(e.target.value)} placeholder="Tìm BTC, ETH…"/></label><span className={market.connected ? "feed-ok" : "muted"}>{market.connected ? "● LIVE" : "○ FALLBACK"}</span></div><div className="asset-grid markets-grid">{list.map(a => <AssetCard key={a.symbol} asset={a} onOpen={openAsset}/>)}</div></div>;
+}
+
+function ChartModal({ asset, onClose }) {
+  const { points, loading } = useChart(asset);
+  const current = points[points.length - 1] || asset.price;
+  const first = points[0] || current;
+  const chartChange = first ? ((current - first) / first) * 100 : 0;
+  return <div className="modal-backdrop" role="presentation" onMouseDown={e => e.target === e.currentTarget && onClose()}><section className="chart-modal" role="dialog" aria-modal="true" aria-label={`${asset.name} chart`}><div className="modal-head"><div><div className="kicker">{asset.symbol} / USDT</div><h2>{asset.name}</h2><div className="modal-price">${money(asset.price)} <span className={asset.change >= 0 ? "positive" : "negative"}>{asset.change >= 0 ? "+" : ""}{Number(asset.change || 0).toFixed(2)}% 24H</span></div></div><button className="icon-button" onClick={onClose} aria-label="Đóng">×</button></div><div className="chart-wrap"><MiniChart points={points} large={true}/>{loading && <span className="chart-loading">Đang tải lịch sử…</span>}</div><div className="chart-meta"><span>48 giờ</span><strong className={chartChange >= 0 ? "positive" : "negative"}>{chartChange >= 0 ? "+" : ""}{chartChange.toFixed(2)}%</strong><span>Cập nhật {timeLabel(asset.updatedAt)}</span></div><div className="alert-panel"><strong>Cảnh báo giá</strong><span className={asset.change >= 3 ? "positive" : asset.change <= -3 ? "negative" : "muted"}>{asset.change >= 3 ? "▲ Tăng mạnh" : asset.change <= -3 ? "▼ Giảm mạnh" : "● Biến động bình thường"}</span><small>Ngưỡng hiển thị nhanh: ±3% trong 24H.</small></div></section></div>;
+}
+
+function Wallet({ go }) {
+  const { address, isConnected } = useAppKitAccount();
+  const { chainId } = useAppKitNetwork();
+  const { data: balance } = useBalance({ address, chainId: SEPOLIA_ID, query: { enabled: Boolean(address) } });
+  return <div className="page"><Header title="Wallet" text="Kết nối ví non-custodial để kiểm tra số dư Ethereum Sepolia." action={<AppKitButton/>}/><div className="wallet-page-card">{isConnected ? <><div className="connected-banner"><span className="big-check">✓</span><div><strong>Ví đã kết nối</strong><small>{shorten(address)}</small></div></div><div className="wallet-grid"><div><span>Network</span><strong>{Number(chainId) === SEPOLIA_ID ? "Ethereum Sepolia" : `Chain ${chainId ?? "—"}`}</strong></div><div><span>ETH balance</span><strong>{balance ? `${Number(formatEther(balance.value)).toFixed(6)} ETH` : "Đang đọc…"}</strong></div><div><span>Security</span><strong>Không lưu seed phrase</strong></div></div><button className="ghost-button" onClick={() => go("trade")}>Kiểm thử giao dịch →</button></> : <div className="empty-wallet"><div className="wallet-symbol">◈</div><h2>Kết nối ví của bạn</h2><p>CryptoPool PRO không yêu cầu seed phrase hoặc private key.</p><AppKitButton/></div>}</div></div>;
+}
+
+function Trade() {
+  const { address, isConnected } = useAppKitAccount();
+  const { chainId } = useAppKitNetwork();
+  const goodNetwork = Number(chainId) === SEPOLIA_ID;
+  const { data: balance, refetch } = useBalance({ address, chainId: SEPOLIA_ID, query: { enabled: Boolean(address) } });
+  const { data: hash, error, isPending, sendTransactionAsync } = useSendTransaction();
+  const { isLoading: confirming, isSuccess } = useWaitForTransactionReceipt({ hash, confirmations: 1 });
+  const [amount, setAmount] = useState("");
+  const [recipient, setRecipient] = useState("0x9BB4aBC72f2c4818F66C895Cd1a9de2c827C5C06");
+  const valid = isAddress(recipient);
+  const numeric = Number(amount);
+  const eth = balance ? Number(formatEther(balance.value)) : 0;
+  const enough = numeric > 0 && numeric + 0.0005 < eth;
+  const send = async () => { if (!isConnected || !goodNetwork || !valid || !enough || isPending || confirming) return; try { await sendTransactionAsync({ to: recipient, value: parseEther(amount), chainId: SEPOLIA_ID }); await refetch(); } catch {} };
+  return <div className="page"><Header title="Giao dịch testnet" text="Gửi ETH thật trên Ethereum Sepolia. Bạn tự kiểm tra và ký giao dịch trong ví." action={<AppKitButton/>}/><div className="trade-layout"><div className="trade-box"><div className="trade-label">SỐ DƯ ETH SEPOLIA</div><div className="balance-box"><strong>{balance ? `${eth.toFixed(6)} ETH` : "—"}</strong><button onClick={() => refetch()} disabled={!address}>↻</button></div><div className="trade-label">SỐ LƯỢNG</div><input className="amount" inputMode="decimal" value={amount} onChange={e => setAmount(e.target.value.replace(/[^0-9.]/g, ""))} placeholder="0.001"/><div className="trade-label">ĐỊA CHỈ NHẬN</div><div className="input-with-action"><input className="recipient-input large-address-input" value={recipient} onChange={e => setRecipient(e.target.value)} placeholder="0x…"/><button onClick={() => setRecipient("")}>Xóa</button></div><button className="primary-button" disabled={!isConnected || !goodNetwork || !valid || !enough || isPending || confirming} onClick={send}>{isSuccess ? "✓ Giao dịch đã xác nhận" : confirming ? "Đang xác nhận…" : isPending ? "Đang mở/xác nhận trong ví…" : !isConnected ? "Kết nối ví để gửi" : !goodNetwork ? "Chuyển sang Sepolia" : !valid ? "Địa chỉ nhận không hợp lệ" : !enough ? "Không đủ ETH sau gas" : "Gửi ETH Sepolia"}</button>{hash && <div className="tx-result"><b>Transaction</b><a target="_blank" rel="noreferrer" href={`https://sepolia.etherscan.io/tx/${hash}`}>{shorten(hash)}</a></div>}{error && <div className="inline-warning">{error.shortMessage || "Giao dịch bị hủy hoặc thất bại."}</div>}</div><aside className="checks"><h3>Kiểm tra trước khi gửi</h3><div className="check"><span className={isConnected ? "check-good" : "check-bad"}>{isConnected ? "✓" : "!"}</span><div><b>Wallet</b><small>{isConnected ? shorten(address) : "Chưa kết nối"}</small></div></div><div className="check"><span className={goodNetwork ? "check-good" : "check-bad"}>{goodNetwork ? "✓" : "!"}</span><div><b>Network</b><small>{goodNetwork ? "Ethereum Sepolia" : "Cần Sepolia"}</small></div></div><div className="check"><span className={valid ? "check-good" : "check-bad"}>{valid ? "✓" : "!"}</span><div><b>Recipient</b><small>{valid ? "Địa chỉ hợp lệ" : "Địa chỉ không hợp lệ"}</small></div></div><div className="check"><span className="check-good">✓</span><div><b>Execution</b><small>Blockchain testnet thật</small></div></div></aside></div></div>;
+}
+
+function Portfolio({ market }) {
+  const { address } = useAppKitAccount();
+  const eth = market.data.ETH?.price || 0;
+  return <div className="page"><Header title="Portfolio" text="Tổng quan tài sản mẫu và dữ liệu thị trường hiện tại." action={<AppKitButton/>}/><div className="portfolio-hero"><span>DEMO PORTFOLIO VALUE</span><strong>$10,248.60</strong><small>{address ? `Ví ${shorten(address)} • ETH market $${money(eth)}` : "Kết nối ví để hiển thị số dư testnet"}</small></div><div className="portfolio-grid"><div><span>Available</span><strong>$8,540.20</strong></div><div><span>Allocated</span><strong>$1,708.40</strong></div><div><span>Assets tracked</span><strong>10</strong></div></div><div className="notice"><span>◉</span><div><strong>Lưu ý</strong><p>Giá crypto là dữ liệu thị trường; giá trị portfolio trên trang này vẫn là số liệu demo, không phải số dư đầu tư thật.</p></div></div></div>;
+}
+function Pools({ go }) { return <div className="page"><Header title="Pools" text="Các pool minh họa cho kiến trúc sản phẩm tương lai." action={<button className="ghost-button" onClick={() => go("markets")}>Xem tài sản →</button>}/><div className="pool-grid">{POOLS.map(p => <PoolCard key={p.name} pool={p}/>)}</div><div className="notice"><span>◉</span><div><strong>Chưa phải DeFi production</strong><p>Smart contract, vault, yield strategy và audit production chưa được kích hoạt trong bản PRO hiện tại.</p></div></div></div>; }
+
+function App() {
+  const [page, setPage] = useState("dashboard");
+  const [selected, setSelected] = useState(null);
+  const market = useRealtimeMarket();
+  useEffect(() => { document.title = "CryptoPool PRO"; }, []);
+  const go = useCallback(next => { setPage(next); window.scrollTo({ top: 0, behavior: "smooth" }); }, []);
+  const nav = [{ id: "dashboard", icon: "⌂", label: "Dashboard" }, { id: "markets", icon: "◌", label: "Markets" }, { id: "pools", icon: "◈", label: "Pools" }, { id: "portfolio", icon: "▣", label: "Portfolio" }, { id: "trade", icon: "↗", label: "Trade" }, { id: "wallet", icon: "◎", label: "Wallet" }];
+  return <div className="app-shell"><aside className="sidebar"><div className="brand"><div className="brand-mark">C</div><div><strong>CryptoPool</strong><span>PRO • WEB3 / DEFI</span></div></div><span className="nav-label">PLATFORM</span><nav>{nav.map(n => <button key={n.id} className={page === n.id ? "active" : ""} onClick={() => go(n.id)}><span>{n.icon}</span>{n.label}</button>)}</nav><div className="sidebar-bottom"><div className="wallet-mini"><div className="wallet-mini-top"><span className={`status-dot ${market.connected ? "on" : ""}`}/>{market.connected ? "Market live" : "Market reconnecting"}</div><strong>Ethereum Sepolia</strong><p>Testnet environment</p><span className="network-tag good">10 assets</span></div><button className="theme-switch" onClick={() => document.documentElement.classList.toggle("light")}>◐ Theme</button></div></aside><main><header className="topbar"><div className="mobile-brand"><div className="brand-mark">C</div><div><strong>CryptoPool PRO</strong><span>WEB3 / DEFI</span></div></div><span className="network-chip"><i/> {market.connected ? "Live Market" : "Connecting"}</span><AppKitButton/></header>{page === "dashboard" && <Dashboard market={market} go={go} openAsset={setSelected}/>} {page === "markets" && <Markets market={market} openAsset={setSelected} go={go}/>} {page === "pools" && <Pools go={go}/>} {page === "portfolio" && <Portfolio market={market}/>} {page === "trade" && <Trade/>} {page === "wallet" && <Wallet go={go}/>} </main>{selected && <ChartModal asset={selected} onClose={() => setSelected(null)}/>}<nav className="mobile-nav">{nav.map(n => <button key={n.id} className={page === n.id ? "active" : ""} onClick={() => go(n.id)}><span>{n.icon}</span><small>{n.label}</small></button>)}</nav></div>;
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<WagmiProvider config={adapter.wagmiConfig}><QueryClientProvider client={queryClient}><App/></QueryClientProvider></WagmiProvider>);
