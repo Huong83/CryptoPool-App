@@ -1,12 +1,15 @@
-/* CryptoPool Pro brand lockup — presentation only. */
-.brand strong{font-size:0!important;line-height:1!important;display:block}
-.brand strong::before{content:"CryptoPool Pro";display:block;font-size:15px;line-height:1.15;letter-spacing:-.25px;font-weight:850}
-.brand span{font-size:0!important;letter-spacing:0!important;text-transform:none!important;color:transparent!important;margin-top:4px!important;line-height:1.15!important}
-.brand span::before{content:"Digital Asset";display:block;font-size:9px;line-height:1.15;letter-spacing:.55px;font-weight:650;color:#9aa7b8;text-transform:none}
-.mobile-brand strong{font-size:0!important;line-height:1!important;display:block}
-.mobile-brand strong::before{content:"CryptoPool Pro";display:block;font-size:13px;line-height:1.15;letter-spacing:-.15px;font-weight:850}
-.mobile-brand span{font-size:0!important;letter-spacing:0!important;text-transform:none!important;color:transparent!important;margin-top:4px!important;line-height:1.15!important}
-.mobile-brand span::before{content:"Digital Asset";display:block;font-size:8px;line-height:1.15;letter-spacing:.35px;font-weight:650;color:#9aa7b8}
+/* CryptoPool Pro brand lockup — final presentation layer. */
+/* The original secondary label nodes are hidden completely so no legacy text can remain beside the mark. */
+.brand > div:not(.brand-mark){display:block}
+.brand > div:not(.brand-mark) strong{font-size:0!important;line-height:1!important;display:block}
+.brand > div:not(.brand-mark) strong::before{content:"CryptoPool Pro";display:block;font-size:15px;line-height:1.15;letter-spacing:-.25px;font-weight:850}
+.brand > div:not(.brand-mark) span{display:none!important}
+.brand > div:not(.brand-mark)::after{content:"Digital Asset";display:block;margin-top:4px;font-size:9px;line-height:1.15;letter-spacing:.55px;font-weight:650;color:#9aa7b8}
+.mobile-brand > div:not(.brand-mark){display:block}
+.mobile-brand > div:not(.brand-mark) strong{font-size:0!important;line-height:1!important;display:block}
+.mobile-brand > div:not(.brand-mark) strong::before{content:"CryptoPool Pro";display:block;font-size:13px;line-height:1.15;letter-spacing:-.15px;font-weight:850}
+.mobile-brand > div:not(.brand-mark) span{display:none!important}
+.mobile-brand > div:not(.brand-mark)::after{content:"Digital Asset";display:block;margin-top:4px;font-size:8px;line-height:1.15;letter-spacing:.35px;font-weight:650;color:#9aa7b8}
 
 /* Brand presentation in the dashboard hero, directly below LIVE MARKET. */
 .hero-copy h1{font-size:0!important;line-height:1.05!important;letter-spacing:0!important;margin:20px 0 19px!important}
@@ -16,10 +19,10 @@
 .hero-copy h1 em::after{content:"Web3 Asset Management Platform";display:block;margin-top:8px;font-size:clamp(10px,1vw,12px);line-height:1.25;letter-spacing:.45px;font-weight:600;color:#647287}
 
 @media (max-width:620px){
-  .brand strong::before{font-size:14px}
-  .brand span::before{font-size:8px}
-  .mobile-brand strong::before{font-size:13px}
-  .mobile-brand span::before{font-size:8px}
+  .brand > div:not(.brand-mark) strong::before{font-size:14px}
+  .brand > div:not(.brand-mark)::after{font-size:8px}
+  .mobile-brand > div:not(.brand-mark) strong::before{font-size:13px}
+  .mobile-brand > div:not(.brand-mark)::after{font-size:8px}
   .hero-copy h1::before{font-size:clamp(34px,11vw,48px);letter-spacing:-2px}
   .hero-copy h1 em::before{font-size:18px}
   .hero-copy h1 em::after{font-size:9px;letter-spacing:.25px}
