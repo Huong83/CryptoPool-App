@@ -20,17 +20,23 @@
 - GitHub Actions deployment actions are pinned to commit SHAs.
 - Workflow permissions are restricted to the minimum required for build/deployment jobs.
 
-## Reproducibility issue requiring closure
+## Dependency reproducibility
 
-The repository currently has no `package-lock.json`, while `package.json` uses semver ranges. A clean buyer build can therefore resolve a different dependency tree over time.
+`package-lock.json` is committed to the repository and the Pages workflow uses `npm ci`, so CI installs the locked dependency tree rather than resolving fresh versions from semver ranges. GitHub documents `npm ci` as the reproducible install path when a lockfile is committed. citeturn0search0
 
-**Required closure:** generate the lockfile with the intended Node/npm toolchain, run a clean build, commit the lockfile, then record the resulting release commit SHA.
+The reproducibility gate is therefore **closed for the current repository revision**. The exact commit used for the most recently verified successful Pages workflow is recorded in the README/release evidence.
+
+## CI/CD verification
+
+The repository's GitHub Pages workflow has completed successfully for the current release-preparation changes, including build and deployment jobs. This verifies the automated dependency installation, Vite production build, Pages artifact creation, and Pages deployment path.
+
+This CI result is not a substitute for manual browser acceptance testing.
 
 ## Functional verification still required
 
-The following should be executed from a clean environment before a buyer is told that the release candidate has passed acceptance testing:
+Before a buyer is told that the release candidate has passed full acceptance testing, execute from a clean environment:
 
-- `npm install` or clean locked install.
+- `npm ci`.
 - `npm run build`.
 - Production deployment check.
 - Desktop/mobile smoke test.
