@@ -58,7 +58,9 @@ The included GitHub Actions workflow builds the Vite application and deploys `di
 - `CHANGELOG.md` — package preparation notes
 
 ## Release gate
-The reproducible-release gate is now closed for the current repository revision: `package-lock.json` is committed, GitHub Actions installs dependencies with `npm ci`, and the Pages workflow completed successfully for commit `6bbc424529bea7696564845b5bcef42a5d1f8440` (build and deploy jobs successful). The next documentation revision will trigger a fresh verification run.
+The reproducible-release gate is **closed for the current repository revision**. `package-lock.json` is committed, GitHub Actions installs dependencies with `npm ci`, and the Pages workflow for commit `e3a941bc7c3441e2eed20719f45bac45758c0e` completed successfully with both the build and deploy jobs green on 2026-09-04 (workflow run `33861704496`).
+
+No further source or dependency changes are required for this release gate. Any future change should be treated as a new release candidate and must repeat the clean-install/build/deployment verification.
 
 ## Recommended commercial positioning
 **CryptoPool PRO — Web3 / DeFi Product & Technology Asset**
