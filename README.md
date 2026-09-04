@@ -55,10 +55,10 @@ The included GitHub Actions workflow builds the Vite application and deploys `di
 - `docs/SECURITY-REVIEW.md` — repository security review and release gates
 - `SECURITY.md` — security boundaries and production requirements
 - `IP_TRANSFER_NOTE.md` — ownership/transfer items to verify before closing
-- `CHANGELOG.md` — package preparation notes
+- `CHANGELOG.md` — release and package preparation notes
 
 ## Release gate
-The reproducible-release gate is **closed for the current repository revision**. `package-lock.json` is committed, GitHub Actions installs dependencies with `npm ci`, and the Pages workflow for commit `e3a941bc7c3441e2eed20719f45bac45758c0e` completed successfully with both the build and deploy jobs green on 2026-09-04 (workflow run `33861704496`).
+The reproducible-release gate is **closed for the current repository revision**. `package-lock.json` is committed, GitHub Actions installs dependencies with `npm ci`, and the Pages workflow for the current release commit `b5ff6717db51555de50d861d03e7f0fff55e2808` completed successfully with both the build and deploy jobs green on 2026-09-04 (workflow run `33869227106`).
 
 No further source or dependency changes are required for this release gate. Any future change should be treated as a new release candidate and must repeat the clean-install/build/deployment verification.
 
