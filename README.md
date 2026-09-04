@@ -1,72 +1,11 @@
-# CryptoPool PRO — Acquisition-Ready Web3 Asset
+# CryptoPool PRO — Public Demo
 
-## Asset overview
-CryptoPool PRO is an early-stage Web3/DeFi product and technology asset. The package contains a React/Vite frontend, live market-data layer, non-custodial wallet connection, Ethereum Sepolia testnet transaction flow, responsive UI, deployment automation, smart-contract workspace, and buyer-facing technical documentation.
+The public repository is now a demo/archive shell only.
 
-**Current commercial status:** Early-stage MVP / pre-revenue / testnet.
+The buyer-ready authoritative source is stored in the private `Huong83/Cryptopool` master repository.
 
-## Current verified scope
-- React 19 + Vite 8 frontend
-- Reown AppKit + Wagmi + Viem wallet integration
-- Ethereum Sepolia testnet network configuration
-- Non-custodial wallet connection flow
-- Sender ETH balance displayed in-app
-- Receiver ETH balance lookup on Sepolia
-- Real Sepolia ETH transfer flow requiring the user's own wallet signature
-- Transaction status and Sepolia Etherscan verification link
-- Live market data for supported assets through public market-data providers
-- PI price sourced from external market-data providers; no invented PI price
-- SDA remains visible as an asset but is not assigned a fabricated market price when no verified source is available
-- Multi-timeframe market charts
-- Dashboard, Markets, Pools, Portfolio, Wallet and Trade views
-- Dark Web3 UI designed for desktop and mobile
-- GitHub Actions + GitHub Pages deployment
+Copyright (c) 2026 Huong83 / CryptoPool Pro. All rights reserved.
 
-## Important product status
-This is **not yet a production DeFi protocol** and should not be marketed as one. The current blockchain interaction is explicitly on Ethereum Sepolia testnet. There is no production vault, yield strategy, mainnet investment flow, audited protocol, backend database, transaction indexer, or verified revenue stream included in the current package.
+No permission is granted to copy, reproduce, modify, redistribute, sublicense, resell, publish, or create derivative works from the proprietary source.
 
-The project intentionally avoids fabricated APY, TVL, revenue, user numbers, token balances, or market prices. This makes the asset easier for a serious buyer to evaluate during technical due diligence.
-
-## Wallet and transaction security boundary
-CryptoPool does not request or store seed phrases or private keys. Users approve transactions in their connected wallet. The frontend can display public on-chain balances and transaction status, while signing authority remains with the user's wallet.
-
-Before any production deployment, the buyer should replace the public frontend Reown project identifier with a buyer-controlled project, configure the production domain, review wallet-provider settings, and complete an independent smart-contract/security review. Role-based access control and least-privilege administration should be used for production contracts where applicable. OpenZeppelin documents role-based access control and stronger admin-management patterns for production contract systems.
-
-## Reown configuration
-The Reown Project ID is a public frontend identifier, not a private key. The buyer should replace the existing project identifier with one controlled by the buyer before production deployment and configure the production domain in the Reown dashboard.
-
-**Never place private keys, seed phrases, wallet secrets, RPC secrets, or server credentials in this repository.**
-
-## Local setup
-1. Install Node.js 24+.
-2. Run `npm ci` for a reproducible dependency installation from `package-lock.json`.
-3. Create `.env` with `VITE_REOWN_PROJECT_ID=<buyer-controlled-project-id>` if replacing the existing configuration.
-4. Run `npm run dev`.
-5. Run `npm run build` for a production build.
-
-## Deployment
-The included GitHub Actions workflow builds the Vite application and deploys `dist/` to GitHub Pages. GitHub Pages supports custom workflows using `actions/upload-pages-artifact` and `actions/deploy-pages`; a buyer can later move the frontend to another hosting provider or a verified custom domain.
-
-## Acquisition documents
-- `docs/ACQUISITION-ASSET-REGISTER.md` — assets included/excluded and transfer notes
-- `docs/TECHNICAL-DUE-DILIGENCE.md` — technical status and verification checklist
-- `docs/KNOWN-LIMITATIONS.md` — current limitations and development gaps
-- `docs/BUYER-HANDOVER.md` — recommended transfer and handover procedure
-- `docs/SECURITY-REVIEW.md` — repository security review and release gates
-- `SECURITY.md` — security boundaries and production requirements
-- `IP_TRANSFER_NOTE.md` — ownership/transfer items to verify before closing
-- `CHANGELOG.md` — release and package preparation notes
-
-## Release gate
-The reproducible-release gate is **closed for the current repository revision**. `package-lock.json` is committed, GitHub Actions installs dependencies with `npm ci`, and the Pages workflow for the current release commit `b5ff6717db51555de50d861d03e7f0fff55e2808` completed successfully with both the build and deploy jobs green on 2026-09-04 (workflow run `33869227106`).
-
-No further source or dependency changes are required for this release gate. Any future change should be treated as a new release candidate and must repeat the clean-install/build/deployment verification.
-
-## Recommended commercial positioning
-**CryptoPool PRO — Web3 / DeFi Product & Technology Asset**
-
-Recommended public status: **Early-stage MVP, pre-revenue, Ethereum Sepolia testnet**.
-
-The strongest value proposition is the working product foundation: wallet UX, live market layer, testnet transaction experience, responsive Web3 interface, deployment automation, and a documented path toward a production protocol.
-
-Do not claim revenue, active users, TVL, audited smart contracts, production transaction volume, token issuance, partnerships, or guaranteed investment returns unless separately verified and documented.
+The previously deployed GitHub Pages demo may remain available independently of this repository snapshot. Private storage does not erase copies, forks, caches, or prior Git history created while the source was public.
