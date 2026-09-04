@@ -1,0 +1,48 @@
+name: Fix Trust Wallet direct flow v2
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Patch source safely
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('src/main.jsx')
+          s = p.read_text()
+          if 'appkit-wallet-button/react' not in s:
+              marker = 'import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";'
+              if marker not in s:
+                  raise SystemExit('Import marker not found; refusing source change')
+              s = s.replace(marker, marker + '\nimport { useAppKitWallet } from "@reown/appkit-wallet-button/react";', 1)
+          start = s.find('function ConnectWallet(')
+          if start < 0:
+              raise SystemExit('ConnectWallet start not found; refusing source change')
+          end = s.find('\nfunction ', start + 1)
+          if end < 0:
+              raise SystemExit('ConnectWallet end not found; refusing source change')
+          new_fn = '''function ConnectWallet({ compact = false }) {\n  const { open } = useAppKit();\n  const { isConnected } = useAppKitAccount();\n  const { isReady, isPending, connect } = useAppKitWallet({ namespace: "eip155" });\n  if (isConnected) return compact ? <AppKitAccountButton balance="hide" /> : <AppKitButton />;\n  const cls = compact ? "wallet-connect compact" : "wallet-connect";\n  return <div className="wallet-actions">\n    <button className={cls} onClick={() => open({ view: "Connect", namespace: "eip155" })}>Kết nối ví</button>\n    <button className={`${cls} trust-direct`} onClick={() => connect("trust")} disabled={!isReady || isPending}>{isPending ? "Đang mở Trust Wallet…" : "Trust Wallet"}</button>\n  </div>;\n}'''
+          s = s[:start] + new_fn + s[end:]
+          p.write_text(s)
+          PY
+          npm install --package-lock-only --ignore-scripts
+          npm run build
+      - name: Commit changes
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/main.jsx package.json package-lock.json
+          git diff --cached --quiet && exit 0
+          git commit -m "fix: add direct Trust Wallet connection"
+          git push
