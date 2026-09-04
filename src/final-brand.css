@@ -1,0 +1,7 @@
+/* CryptoPool PRO final hero lockup. Kept isolated so the public demo and MASTER can share the same final presentation. */
+.hero-copy > h1{font-size:0!important;line-height:1.05!important;letter-spacing:-1.5px!important;margin:20px 0 16px!important;max-width:760px!important}
+.hero-copy > h1::before{content:"CryptoPro Smart Web3/DeFi";display:block;font-size:clamp(38px,4.5vw,65px);line-height:1.01;letter-spacing:-3.5px;color:#eef2f7;font-weight:850}
+.hero-copy > h1 em{display:none!important}
+.hero-copy > p{font-size:0!important;line-height:1.7!important;max-width:680px!important;margin:0!important}
+.hero-copy > p::before{content:"Nơi tin cậy để bạn kiểm tra tài sản và giao dịch nhanh chóng. Tài sản sẽ lưu trực tiếp vào ví của bạn mà không cần qua CEX.";display:block;font-size:14px;line-height:1.8;color:#8b98aa}
+@media(max-width:760px){.hero-copy > h1::before{font-size:clamp(32px,10vw,48px);letter-spacing:-2px}.hero-copy > p::before{font-size:13px;line-height:1.7}}
