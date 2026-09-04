@@ -1,0 +1,59 @@
+name: Fix Trust Wallet connection
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Apply direct Trust Wallet flow
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          pkg = Path('package.json')
+          data = json.loads(pkg.read_text())
+          deps = data.setdefault('dependencies', {})
+          deps['@reown/appkit-wallet-button'] = '^1.8.23'
+          pkg.write_text(json.dumps(data, ensure_ascii=False, indent=2) + '\n')
+
+          p = Path('src/main.jsx')
+          s = p.read_text()
+          old_import = 'import { createAppKit, AppKitAccountButton, AppKitButton, AppKitConnectButton, useAppKit, useAppKitAccount, useAppKitNetwork, useAppKitState } from "@reown/appkit/react";'
+          new_import = 'import { createAppKit, AppKitAccountButton, AppKitButton, AppKitConnectButton, useAppKit, useAppKitAccount, useAppKitNetwork, useAppKitState } from "@reown/appkit/react";\nimport { useAppKitWallet } from "@reown/appkit-wallet-button/react";'
+          if old_import in s and 'appkit-wallet-button/react' not in s:
+              s = s.replace(old_import, new_import, 1)
+
+          old_fn = '''function ConnectWallet({ compact = false }) {\n  const { open } = useAppKit();\n  const { address, isConnected } = useAppKitAccount();\n  const { loading } = useAppKitState();\n  if (isConnected) return compact ? <AppKitAccountButton balance="hide" /> : <AppKitButton />;\n  return <button className={compact ? "wallet-connect compact" : "wallet-connect"} onClick={() => open({ view: "Connect" })} disabled={loading}>{loading ? "Đang mở ví…" : "Kết nối ví"}</button>;\n}'''
+          new_fn = '''function ConnectWallet({ compact = false }) {\n  const { open } = useAppKit();\n  const { isConnected } = useAppKitAccount();\n  const { isReady, isPending, connect } = useAppKitWallet({ namespace: "eip155" });\n  if (isConnected) return compact ? <AppKitAccountButton balance="hide" /> : <AppKitButton />;\n  const cls = compact ? "wallet-connect compact" : "wallet-connect";\n  return <div className="wallet-actions">\n    <button className={cls} onClick={() => open({ view: "Connect", namespace: "eip155" })}>Kết nối ví</button>\n    <button className={`${cls} trust-direct`} onClick={() => connect("trust")} disabled={!isReady || isPending}>{isPending ? "Đang mở Trust Wallet…" : "Trust Wallet"}</button>\n  </div>;\n}'''
+          if old_fn not in s:
+              raise SystemExit('Expected ConnectWallet function was not found; refusing to modify source.')
+          s = s.replace(old_fn, new_fn, 1)
+          p.write_text(s)
+          PY
+
+          npm install --package-lock-only --ignore-scripts
+
+      - name: Verify build
+        run: npm install --ignore-scripts && npm run build
+
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json src/main.jsx
+          git diff --cached --quiet && exit 0
+          git commit -m "fix: add direct Trust Wallet connection button"
+          git push
